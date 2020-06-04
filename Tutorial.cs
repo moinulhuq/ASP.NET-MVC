@@ -239,6 +239,44 @@ Controller
 		}
 	}
 
+Bind attribute
+--------------
+MVC framework also enables you to specify which properties of a model class you want to bind. The [Bind] attribute will let you specify the exact properties of a model will be included or excluded.
+
+Controller
+----------
+    public class HomeController : Controller
+    {
+		[HttpPost]
+		public string Edit([Bind(Include = "StudentId, StudentName")] Student std)
+		{			
+			var id = std.StudentId;
+			var name = std.StudentName;
+			var age = std.Age;
+
+			return std.StudentName+"="+ std.Age;
+		}
+    }
+
+Above you will not get any value for ‘Age’ as it is not included in the Bind attribute.
+
+Controller
+----------
+    public class HomeController : Controller
+    {
+		[HttpPost]
+		public string Edit([Bind(Exclude = "StudentId, StudentName")] Student std)
+		{			
+			var id = std.StudentId;
+			var name = std.StudentName;
+			var age = std.Age;
+
+			return std.StudentName+"="+ std.Age;
+		}    
+}
+
+Above you will not get any value for ‘StudentId’ and ‘StudentName’ as it is excluded in the Bind attribute.
+
 Routing
 -------
 Routing eliminate needs of mapping each URL with a physical file (http://domain/studentsinfo.aspx), with the help of routing we can do like http://domain/students. It can be used with ASP.NET Webform or MVC. Routing has request handler (Controller class for MVC and ‘.aspx’ file for ASP.NET Webform).
