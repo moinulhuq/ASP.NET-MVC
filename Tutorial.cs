@@ -110,7 +110,6 @@ Declare Variables
 
 	<p>@str</p>
 
-
 Comment
 -------
 To comment in view, HTML along with other code use @*  *@.
@@ -128,7 +127,6 @@ To comment in view, HTML along with other code use @*  *@.
     <p>@str</p>
 
 *@
-
 
 Display Text from Code Block
 ----------------------------
