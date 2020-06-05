@@ -1,5 +1,5 @@
 Views
--------
+-----
 Views are stored in Views folder. Different action methods of a controller can have different views. Views folder contains a separate folder for each controller, name that folder name as per controller name, to store multiple views. Now, name the view same as controller’s action method so that you don't have to specify view name explicitly.
 
 Naming view according to the controller name
@@ -38,47 +38,183 @@ Best way to create view
 
 Example
 -------
-@model IEnumerable<MVCWebApp.Models.Student>
+	@model IEnumerable<MVCWebApp.Models.Student>
 
-@{
-    ViewBag.Title = "Index";
-    Layout = "~/Views/Shared/_Layout.cshtml";
-}
+	@{
+	    ViewBag.Title = "Index";
+	    Layout = "~/Views/Shared/_Layout.cshtml";
+	}
 
-<h2>Index</h2>
+	<h2>Index</h2>
+	<p>
+	    @Html.ActionLink("Create New", "Create")
+	</p>
 
-<p>
-    @Html.ActionLink("Create New", "Create")
-</p>
-<table class="table">
-    <tr>
-        <th>
-            @Html.DisplayNameFor(model => model.StudentName)
-        </th>
-        <th>
-            @Html.DisplayNameFor(model => model.Age)
-        </th>
-        <th></th>
-    </tr>
+	<table class="table">
+	    <tr>
+	        <th>
+	            @Html.DisplayNameFor(model => model.StudentName)
+	        </th>
+	        <th>
+	            @Html.DisplayNameFor(model => model.Age)
+	        </th>
+	        <th></th>
+	    </tr>
 
-@foreach (var item in Model) {
-    <tr>
-        <td>
-            @Html.DisplayFor(modelItem => item.StudentName)
-        </td>
-        <td>
-            @Html.DisplayFor(modelItem => item.Age)
-        </td>
-        <td>
-            @Html.ActionLink("Edit", "Edit", new { id=item.StudentId }) |
-            @Html.ActionLink("Details", "Details", new { id=item.StudentId }) |
-            @Html.ActionLink("Delete", "Delete", new { id=item.StudentId })
-        </td>
-    </tr>
-}
-</table>
+	@foreach (var item in Model) {
+	    <tr>
+	        <td>
+	            @Html.DisplayFor(modelItem => item.StudentName)
+	        </td>
+	        <td>
+	            @Html.DisplayFor(modelItem => item.Age)
+	        </td>
+	        <td>
+	            @Html.ActionLink("Edit", "Edit", new { id=item.StudentId }) |
+	            @Html.ActionLink("Details", "Details", new { id=item.StudentId }) |
+	            @Html.ActionLink("Delete", "Delete", new { id=item.StudentId })
+	        </td>
+	    </tr>
+	}
+	</table>
 
-Inline razor expression starts with @ symbol. @Html is a helper class to generate html controls.
+Inline expression
+-----------------
+Start with @ symbol to write server side C# or VB code with Html code. A single line expression does not require a semicolon at the end of the expression.
+
+	<h1>Razor syntax demo</h1>
+	<h2>@DateTime.Now.ToShortDateString()</h2>
+
+Multi-statement Code block
+--------------------------
+
+	@{
+	    var date = DateTime.Now.ToShortDateString();
+	    var message = "Hello World";
+	}
+
+	<h2>Today's date is: @date </h2>
+	<h3>@message</h3>
+
+Declare Variables
+-----------------
+
+	@{
+	    string str = "";
+
+	    if (1 > 0)
+	    {
+	        str = "Hello World!";
+	    }
+	}
+
+	<p>@str</p>
+
+
+Comment
+-------
+To comment in view, HTML along with other code use @*  *@.
+
+@*
+    @{
+        string str = "";
+
+        if (1 > 0)
+        {
+            str = "Hello World!";
+        }
+    }
+
+    <p>@str</p>
+
+*@
+
+
+Display Text from Code Block
+----------------------------
+Use @: or <text>/<text> to display texts within code block.
+
+	@{
+	    var date = DateTime.Now.ToShortDateString();
+	    string message = "Hello World!";
+	    @:Today's date is: @date
+	    <br />
+	    @message
+	}
+
+		(OR)
+
+	@{
+	    var date = DateTime.Now.ToShortDateString();
+	    string message = "Hello World!";
+	    <text>Today's date is:</text> @date
+	    <br />
+	    @message
+	}
+
+if-else condition
+-----------------
+Start with @ symbol and block must be enclosed in braces { }, even for single statement.
+
+	@if (DateTime.IsLeapYear(DateTime.Now.Year))
+	{
+	    @DateTime.Now.Year @:is a leap year.
+	}
+	else
+	{
+	    @DateTime.Now.Year @:is not a leap year.
+	}
+
+for loop
+--------
+
+	@for (int i = 0; i < 5; i++)
+	{
+	    @i.ToString()
+	    <br />
+	}
+
+Model data display
+------------------
+Use @model to use model object anywhere in the view.
+
+Example - Model
+---------------
+    public class Student
+    {
+        public int StudentId { get; set; }
+        public string StudentName { get; set; }
+        public int Age { get; set; }
+    }
+
+Example - Controller
+--------------------
+    public class HomeController : Controller
+    {
+        public ActionResult Index()
+        {
+			Student std = new Student
+			{
+				StudentId = 101,
+				StudentName = "Bouchers",
+				Age = 36
+			};
+
+			return View(std);
+        }
+	}
+
+Example - View
+--------------
+	@model MVCWebApp.Models.Student
+
+	<h2>Student Detail:</h2>
+	<ul>
+	    <li>Student Id: @Model.StudentId</li>
+	    <li>Student Name: @Model.StudentName</li>
+	    <li>Age: @Model.Age</li>
+	</ul>
+
 
 Controller
 ----------
