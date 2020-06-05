@@ -1,3 +1,85 @@
+Views
+-------
+Views are stored in Views folder. Different action methods of a controller can have different views. Views folder contains a separate folder for each controller, name that folder name as per controller name, to store multiple views. Now, name the view same as controller’s action method so that you don't have to specify view name explicitly.
+
+Naming view according to the controller name
+
+Scaffolding structure
+---------------------
+Controllers
+    . HomeController.cs – Methods (Index, Edit, …)
+
+Views
+    . Shared
+    . Home
+        . Index.cshtml
+        . Edit.cshtml
+
+Shared folder contains views, layouts or partial views which will be shared among multiple views
+
+In razor view, we can use both html tags and server side code. Razor uses @ character for server side code instead of traditional <% %>. You can use C# or Visual Basic syntax to write server side code inside razor view. Razor views files have .cshtml or vbhtml extension.
+
+ASP.NET MVC supports following types of view files
+
++---------+----------------------------------------------------------------+
+| .cshtml |           C# Razor view. Supports C# with html tags.           |
+| .vbhtml | Visual Basic Razor view. Supports Visual Basic with html tags. |
+| .aspx   | ASP.Net web form                                               |
+| .ascx   | ASP.NET web control                                            |
++---------+----------------------------------------------------------------+
+ 
+Best way to create view 
+
+1.  Open HomeController class -> right click inside Index method -> click Add View
+2.  Keep the view name as Index
+3.  From template select Empty view
+4.  From Model Select Home Model
+5.  Check "Use a layout page" checkbox and select _Layout.cshtml page for this view
+
+Example
+-------
+@model IEnumerable<MVCWebApp.Models.Student>
+
+@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Index</h2>
+
+<p>
+    @Html.ActionLink("Create New", "Create")
+</p>
+<table class="table">
+    <tr>
+        <th>
+            @Html.DisplayNameFor(model => model.StudentName)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Age)
+        </th>
+        <th></th>
+    </tr>
+
+@foreach (var item in Model) {
+    <tr>
+        <td>
+            @Html.DisplayFor(modelItem => item.StudentName)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.Age)
+        </td>
+        <td>
+            @Html.ActionLink("Edit", "Edit", new { id=item.StudentId }) |
+            @Html.ActionLink("Details", "Details", new { id=item.StudentId }) |
+            @Html.ActionLink("Delete", "Delete", new { id=item.StudentId })
+        </td>
+    </tr>
+}
+</table>
+
+Inline razor expression starts with @ symbol. @Html is a helper class to generate html controls.
+
 Controller
 ----------
 Controller is a class that contains public methods called Action method and handles incoming browser requests, retrieves necessary model data and returns appropriate responses. Every controller class name must end with a word "Controller" Like HomeController and StudentController.
@@ -240,7 +322,7 @@ Controller
 	}
 
 Bind attribute
---------------
+---------------
 MVC framework also enables you to specify which properties of a model class you want to bind. The [Bind] attribute will let you specify the exact properties of a model will be included or excluded.
 
 Controller
@@ -276,6 +358,7 @@ Controller
 }
 
 Above you will not get any value for ‘StudentId’ and ‘StudentName’ as it is excluded in the Bind attribute.
+
 
 Routing
 -------
