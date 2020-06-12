@@ -213,6 +213,1117 @@ Example - View
 	    <li>Age: @Model.Age</li>
 	</ul>
 
+HtmlHelper
+----------
+HtmlHelper class generates html elements. It binds the model object to html elements to display value and also assigns the value of the html elements to the model properties while submitting web form.
+
+	<h2>Index</h2>
+	<p>
+	    @Html.ActionLink("Create New", "Create")
+	</p>
+	<table class="table">
+	    <tr>
+	        <th>
+	            @Html.DisplayNameFor(model => model.StudentName)
+	        </th>
+	        <th>
+	            @Html.DisplayNameFor(model => model.Age)
+	        </th>
+	        <th></th>
+	    </tr>
+
+	@foreach (var item in Model) {
+	    <tr>
+	        <td>
+	            @Html.DisplayFor(modelItem => item.StudentName)
+	        </td>
+	        <td>
+	            @Html.DisplayFor(modelItem => item.Age)
+	        </td>
+	        <td>
+	            @Html.ActionLink("Edit", "Edit", new { id=item.StudentId }) |
+	            @Html.ActionLink("Details", "Details", new { id=item.StudentId }) |
+	            @Html.ActionLink("Delete", "Delete", new { id=item.StudentId })
+	        </td>
+	    </tr>
+	}
+	</table>
+
+@Html is an object of HtmlHelper class and ActionLink() and DisplayNameFor() is extension methods.
+
+	@Html.ActionLink("Create New", "Create") => <a href="/Student/Create">
+
+	@Html.DisplayNameFor(model => model.StudentName) => StudentName
+
+Textbox
+-------
+Html.TextBox(string name, string value, object htmlAttributes) is loosely typed method because name parameter is a string. The name parameter can be a property name of model object.
+
+	@Html.TextBox("StudentName", null, new { @class = "form-control" }) => <input class="form-control" id="StudentNam" name="StudentNam" type="text" value="">
+
+	(OR)
+
+	@Html.TextBox("StudentName", “This is value”, new { @class = "form-control" }) => <input class="form-control" id="StudentNam" name="StudentNam" type="text" value=" This is value ">
+
+TextBoxFor
+----------
+Html.TextBoxFor(Expression<Func<TModel,TValue>> expression, object htmlAttributes) is strongly typed method because it generates text input for model property using lambda expression.
+
+	@Html.TextBoxFor(m => m.StudentName, new { @class = "form-control" }) => <input class="form-control" id="StudentName" name="StudentName" type="text" value="Bouchers">
+
+
+TextArea
+--------
+Html.TextArea(string name, string value, object htmlAttributes) will creates textarea with rows=2 and cols=20.
+
+	@Html.TextArea("Description", null, new { @class = "form-control" }) => <textarea class="form-control" cols="20" id="Description" name="Description" rows="2"></textarea>
+
+TextAreaFor
+-----------
+@Html.TextAreaFor(<Expression<Func<TModel,TValue>> expression, object htmlAttributes) generates a multi line <textarea> element using lambda expression.
+
+	@Html.TextAreaFor(m => m.Description, new { @class = "form-control" }) => <textarea class="form-control" cols="20" id="StudentName" name="StudentName" rows="2"> </textarea> 
+
+CheckBox
+--------
+Html.CheckBox(string name, bool isChecked, object htmlAttributes)
+
+	@Html.CheckBox("isNewlyEnrolled", true) => <input checked="checked" id="isNewlyEnrolled" name="isNewlyEnrolled" type="checkbox" value="true">
+
+CheckBoxFor
+-----------
+Html.CheckBoxFor(<Expression<Func<TModel,TValue>> expression, object htmlAttributes)
+
+	@Html.CheckBoxFor(m => m.isNewlyEnrolled) => 
+	<input data-val="true" data-val-required="The isNewlyEnrolled field is required." id="isNewlyEnrolled" name="isNewlyEnrolled" type="checkbox" value="true">
+	<input name="isNewlyEnrolled" type="hidden" value="false">
+
+Above, notice that, it generated additional hidden field with same 'name' and value=false. This is because when you submit a form, if the checkbox is checked ‘true’ will be sent otherwise ‘false’ will be sent because of that hidden field. If there is no hidden field, nothing will be sent to the server.
+
+RadioButton 
+-----------
+Html.RadioButton(string name, object value, bool isChecked, object htmlAttributes)
+
+	Male:   @Html.RadioButton("Gender","Male")  
+	Female: @Html.RadioButton("Gender","Female")  
+
+	=> 
+
+	Male:   <input id="Gender" name="Gender" type="radio" value="Male">
+	Female: <input id="Gender" name="Gender" type="radio" value="Female">
+
+RadioButtonFor
+--------------
+@Html. RadioButtonFor(<Expression<Func<TModel,TValue>> expression, object value, object htmlAttributes)
+
+	@Html.RadioButtonFor(m => m.Gender,"Male")
+	@Html.RadioButtonFor(m => m.Gender,"Female") 
+
+	=>
+
+	Male:   <input data-val="true" data-val-required="The Gender field is required." id="Gender" name="Gender" type="radio" value="Male">
+	Female: <input id="Gender" name="Gender" type="radio" value="Female">
+
+DropDownList 
+------------
+Html.DropDownList(string name, IEnumerable<SelectLestItem> selectList, string optionLabel, object htmlAttributes)
+
+	@Html.DropDownList("StudentGender", new SelectList(Enum.GetValues(typeof(Gender))), "Select Gender", new { @class = "form-control" })
+
+	=> 
+
+	<select class="form-control" data-val="true" data-val-required="The StudentGender field is required." id="StudentGender" name="StudentGender">
+		<option value="">Select Gender</option>
+		<option selected="selected">Male</option>
+		<option>Female</option>
+	</select>
+
+DropDownListFor
+---------------
+Html.DropDownListFor(Expression<Func<dynamic,TProperty>> expression, IEnumerable<SelectLestItem> selectList, string optionLabel, object htmlAttributes)
+
+	@Html.DropDownListFor(m => m.StudentGender, new SelectList(Enum.GetValues(typeof(Gender))), "Select Gender")
+
+	=>
+
+	<select data-val="true" data-val-required="The StudentGender field is required." id="StudentGender" name="StudentGender">
+		<option value="">Select Gender</option>
+		<option selected="selected">Male</option>
+		<option>Female</option>
+	</select>
+
+
+Example - Model
+---------------
+
+	namespace MVCWebApp.Models
+	{    
+	    public class Student
+	    {
+	        public int StudentId { get; set; }
+	        public string StudentName { get; set; }
+	        public int Age { get; set; }
+	        public bool isNewlyEnrolled { get; set; }
+	        public Gender StudentGender  { get; set; }
+	    }
+
+	    public enum Gender
+	    {
+	        Male,
+	        Female
+	    }
+	}
+
+Example – Controller
+--------------------
+
+    public class HomeController : Controller
+    {
+        public ActionResult Index()
+        {
+			Student std = new Student
+			{
+				StudentId = 101,
+				StudentName = "Bouchers",
+				Age = 36
+			};
+
+			return View(std);
+        }
+	}
+
+Example – View
+--------------
+
+	@using MVCWebApp.Models
+	@model MVCWebApp.Models.Student
+
+	@{
+	    ViewBag.Title = "Index";
+	}
+
+	<h2>Index</h2>
+	<table class="table">
+	    <tr>
+	        <th>
+	            HTML ELement
+	        </th>
+	    </tr>
+	    <tr>
+	        <th>
+	            @Html.DropDownList("StudentGender", new SelectList(Enum.GetValues(typeof(Gender))), "Select Gender", new { @class = "form-control" })
+	        </th>
+	    </tr>
+	</table>
+
+Hidden
+------
+Html.Hidden(string name, object value, object htmlAttributes)
+
+	@Html.Hidden("StudentId")
+
+	=> 
+
+	<input data-val="true" data-val-number="The field StudentId must be a number." data-val-required="The StudentId field is required." id="StudentId" name="StudentId" type="hidden" value="101" />
+
+HiddenFor
+---------
+Html.HiddenFor(Expression<Func<dynamic,TProperty>> expression)
+
+	@Html.HiddenFor(m => m.StudentId)
+
+	=>
+
+	<input data-val="true" data-val-number="The field StudentId must be a number." data-val-required="The StudentId field is required." id="StudentId" name="StudentId" type="hidden" value="101" />
+
+Password
+--------
+Html.Password(string name, object value, object htmlAttributes)
+
+	@Html.Password("OnlinePassword")
+
+	=> 
+
+	<input id="OnlinePassword" name="OnlinePassword" type="password">
+
+PasswordFor
+-----------
+Html.PasswordFor(Expression<Func<dynamic,TProperty>> expression, object htmlAttributes)
+
+	@Html.PasswordFor(m => m.Password)
+
+	=>
+
+	<input id="OnlinePassword" name="OnlinePassword" type="password">
+
+Display
+-------
+To create html string literal. Html.Display("StudentName")
+
+	@Html.Display("StudentName")
+
+	=> 
+
+	“Moin”
+
+DisplayFor
+----------
+Html.DisplayFor(<Expression<Func<TModel,TValue>> expression)
+
+	@Html.DisplayFor(m => m.StudentName)
+
+	=>
+
+	“Moin”
+
+Label
+-----
+Html.Label(string expression, string labelText, object htmlAttributes)
+
+	@Html.Label("StudentName")
+
+	=> 
+
+	<label for="StudentName">StudentName</label>
+
+You can specify another text instead of property name
+
+	@Html.Label("StudentName", "Student-Name")
+
+	=> 
+
+	<label for="StudentName">Student-Name</label>
+
+LabelFor
+--------
+Html.LabelFor(<Expression<Func<TModel,TValue>> expression)
+
+	@Html.LabelFor(m => m.StudentName)
+
+	=>
+
+	<label for="StudentName">StudentName</label>
+
+Editor
+------
+Different HtmlHelper methods used to generated different html elements but we can use ‘Editor’ methods which will generates html input elements based on the datatype. Html.Editor(string propertyname)
+
+The following Html elements can be created by Editor() or EditorFor().
+
++----------------+--------------------------+
+| string         | <input type="text" >     |
+| int            | <input type="number" >   |
+| decimal, float | <input type="text" >     |
+| boolean        | <input type="checkbox" > |
+| Enum           | <input type="text" >     |
+| DateTime       | <input type="datetime" > |
++----------------+--------------------------+
+
+
+	@Html.Editor("StudentId") 
+
+	=> 
+	
+	<input class="text-box single-line" data-val="true" data-val-number="The field StudentId must be a number." data-val-required="The StudentId field is required." id="StudentId" name="StudentId" type="number" value="101">
+
+	@Html.Editor("StudentName") 
+
+	=> 
+
+	<input class="text-box single-line" id="StudentName" name="StudentName" type="text" value="Bouchers">
+
+	@Html.Editor("Age") 
+
+	=> 
+
+	<input class="text-box single-line" data-val="true" data-val-number="The field Age must be a number." data-val-required="The Age field is required." id="Age" name="Age" type="number" value="36">
+
+	@Html.Editor("OnlinePassword") 
+
+	=> 
+
+	<input class="text-box single-line" id="OnlinePassword" name="OnlinePassword" type="text" value="">
+
+	@Html.Editor("isNewlyEnrolled") 
+
+	=> 
+
+	<input class="check-box" data-val="true" data-val-required="The isNewlyEnrolled field is required." id="isNewlyEnrolled" name="isNewlyEnrolled" type="checkbox" value="true"><input name="isNewlyEnrolled" type="hidden" value="false">
+
+	@Html.Editor("Gender") 
+
+	=> 
+
+	<input class="text-box single-line" id="Gender" name="Gender" type="text" value="">
+
+	@Html.Editor("DoB") 
+
+	=> 
+
+	<input class="text-box single-line" data-val="true" data-val-date="The field DoB must be a date." data-val-required="The DoB field is required." id="DoB" name="DoB" type="datetime" value="1/01/0001 12:00:00 am">
+
+EditorFor
+---------
+Html.EditorFor(<Expression<Func<TModel,TValue>> expression)
+
+	@Html.EditorFor(m => m.StudentId) 
+
+	=> 
+
+	<input class="text-box single-line" data-val="true" data-val-number="The field StudentId must be a number." data-val-required="The StudentId field is required." id="StudentId" name="StudentId" type="number" value="101">
+
+	@Html.EditorFor(m => m.StudentName) 
+
+	=> 
+
+	<input class="text-box single-line" id="StudentName" name="StudentName" type="text" value="Bouchers">
+
+	@Html.EditorFor(m => m.Age) 
+
+	=> 
+
+	<input class="text-box single-line" data-val="true" data-val-number="The field Age must be a number." data-val-required="The Age field is required." id="Age" name="Age" type="number" value="36">
+
+	@Html.EditorFor(m => m.Password) 
+
+	=> 
+
+	<input class="text-box single-line" id="OnlinePassword" name="OnlinePassword" type="text" value="">
+
+	@Html.EditorFor(m => m.isNewlyEnrolled) 
+
+	=> 
+
+	<input class="check-box" data-val="true" data-val-required="The isNewlyEnrolled field is required." id="isNewlyEnrolled" name="isNewlyEnrolled" type="checkbox" value="true"><input name="isNewlyEnrolled" type="hidden" value="false">
+
+	@Html.EditorFor(m => m.Gender) 
+
+	=> 
+
+	<input class="text-box single-line" data-val="true" data-val-required="The StudentGender field is required." id="StudentGender" name="StudentGender" type="text" value="Male">
+
+	@Html.EditorFor(m => m.DoB) 
+
+	=> 
+
+	<input class="text-box single-line" data-val="true" data-val-date="The field DoB must be a date." data-val-required="The DoB field is required." id="DoB" name="DoB" type="datetime" value="1/01/0001 12:00:00 am">
+
+ActionLink
+------------
+Html..ActionLink("LinkText", "ActionName", "ControllerName", "Parameter", htmlAttributes)
+
+	@Html.ActionLink("LinkText", "ActionName", "ControllerName", new { id = "123" }, new { @class = "form-control" }) => <a class="form-control" href="/ControllerName/ActionName/123">LinkText</a>
+
+Form Validation
+---------------
+DataAnnotations attributes are used to implement validations. DataAnnotations includes built-in validation attributes like Required, Range for different type of validation which can be applied to the properties of model class.
+
+List of DataAnnotations attributes
+
++-------------------+---------------------------------------------------------------------------------------+
+|     Attribute     |                                      Description                                      |
++-------------------+---------------------------------------------------------------------------------------+
+| Required          | Indicates that the property is a required field                                       |
+| StringLength      | Defines a maximum length for string field                                             |
+| Range             | Defines a maximum and minimum value for a numeric field                               |
+| RegularExpression | Specifies that the field value must match with specified Regular Expression           |
+| CreditCard        | Specifies that the specified field is a credit card number                            |
+| CustomValidation  | Specified custom validation method to validate the field                              |
+| EmailAddress      | Validates with email address format                                                   |
+| FileExtension     | Validates with file extension                                                         |
+| MaxLength         | Specifies maximum length for a string field                                           |
+| MinLength         | Specifies minimum length for a string field                                           |
+| Phone             | Specifies that the field is a phone number using regular expression for phone numbers |
++-------------------+---------------------------------------------------------------------------------------+
+
+Form validation can be done in three ways
+
+	a) ValidtionMessage
+	b) ValidationMessageFor
+	c) ValidationSummary
+
+ValidtionMessage
+----------------
+Html.ValidateMessage(string modelName, string validationMessage, object htmlAttributes)
+
+	@model MVCWebApp.Models.Student
+
+    <div class="form-group">
+        @Html.LabelFor(m => m.StudentName)
+        @Html.TextBoxFor(m => m.StudentName, new { @class = "form-control" })
+        @Html.ValidationMessage("StudentName", "", new { @class = "text-danger" })
+    </div>
+
+	=>
+
+	<div class="form-group">
+		<label for="StudentName">StudentName</label>
+		<input class="input-validation-error form-control" data-val="true" data-val-required="The StudentName field is required." id="StudentName" name="StudentName" type="text" value="">
+		<span class="field-validation-error text-danger" data-valmsg-for="StudentName" data-valmsg-replace="true">The StudentName field is required.</span>
+	</div>
+
+Above, First parameter is Model property name, second parameter is custom error message and third parameter is html attributes.
+
+Example - ValidtionMessage
+--------------------------
+
+	View
+	----
+	@model MVCWebApp.Models.Student
+
+	<body>
+	    @using (Html.BeginForm("Index", "Home", FormMethod.Post))
+	    {
+		    @Html.AntiForgeryToken()
+		    <div class="form-horizontal">
+		        <h4>Student</h4>
+			    <div class="form-group">
+			        @Html.LabelFor(m => m.StudentFName)
+			        @Html.TextBoxFor(m => m.StudentFName, new { @class = "form-control" })
+			        @Html.ValidationMessage("StudentFName", "", new { @class = "text-danger" })
+			    </div>
+
+			    <div class="form-group">
+			        @Html.LabelFor(m => m.StudentLName)
+			        @Html.TextBoxFor(m => m.StudentLName, new { @class = "form-control" })
+			        @Html.ValidationMessage("StudentLName", "", new { @class = "text-danger" })
+			    </div>
+
+			    <div class="form-group">
+			        @Html.LabelFor(m => m.Age)
+			        @Html.TextBoxFor(m => m.Age, new { @class = "form-control" })
+			        @Html.ValidationMessage("Age", "", new { @class = "text-danger" })
+			    </div>
+
+		        <div class="form-group">
+		            <div class="col-md-offset-2 col-md-10">
+		                <input type="submit" value="Create" class="btn btn-default" />
+		            </div>
+		        </div>
+		    </div>
+	    }
+	</body>
+
+	Model
+	-----
+	using System.ComponentModel.DataAnnotations;
+
+	public class Student
+	{
+	    public int StudentId { get; set; }
+	    [Required]
+	    public string StudentFName { get; set; }
+	    [Required]
+	    public string StudentLName { get; set; }
+	    [Required]
+	    public int Age { get; set; }
+	}
+
+	Controller
+	----------
+	using MVCWebApp.Models;
+
+	public class HomeController : Controller
+	{
+	    public ActionResult Index()
+	    {
+	        return View("Index");
+	    }
+
+	    [HttpPost]
+	    public ActionResult Index(Student std)
+	    {
+	        return View("Index");
+	    }
+	}
+
+ValidationMessageFor
+--------------------
+Html.ValidateMessageFor(Expression<Func<dynamic,TProperty>> expression, string validationMessage, object htmlAttributes)
+
+	@model MVCWebApp.Models.Student
+
+    <div class="form-group">
+        @Html.LabelFor(m => m.StudentName)
+        @Html.TextBoxFor(m => m.StudentName, new { @class = "form-control" })
+        @Html.ValidationMessageFor(model => model.StudentName, "", new { @class = "text-danger" })
+    </div>
+
+    =>
+
+	<div class="form-group">
+		<label for="StudentName">StudentName</label>
+		<input class="form-control" data-val="true" data-val-required="The StudentName field is required." id="StudentName" name="StudentName" type="text" value="">
+		<span class="field-validation-valid text-danger" data-valmsg-for="StudentName" data-valmsg-replace="true"></span>
+	</div>
+
+Example - ValidationMessageFor
+------------------------------
+
+	View
+	----
+	@model MVCWebApp.Models.Student
+
+	<body>
+	    @using (Html.BeginForm("Index", "Home", FormMethod.Post))
+	    {
+	        @Html.AntiForgeryToken()
+	        <div class="form-horizontal">
+	            <h4>Student</h4>
+	            <div class="form-group">
+	                @Html.LabelFor(m => m.StudentFName)
+	                @Html.TextBoxFor(m => m.StudentFName, new { @class = "form-control" })
+	                @Html.ValidationMessageFor(model => model.StudentFName, "", new { @class = "text-danger" })
+	            </div>
+
+	            <div class="form-group">
+	                @Html.LabelFor(m => m.StudentLName)
+	                @Html.TextBoxFor(m => m.StudentLName, new { @class = "form-control" })
+	                @Html.ValidationMessageFor(model => model.StudentLName, "", new { @class = "text-danger" })
+	            </div>
+
+	            <div class="form-group">
+	                @Html.LabelFor(m => m.Age)
+	                @Html.TextBoxFor(m => m.Age, new { @class = "form-control" })
+	                @Html.ValidationMessageFor(model => model.Age, "", new { @class = "text-danger" })
+	            </div>
+
+	            <div class="form-group">
+	                <div class="col-md-offset-2 col-md-10">
+	                    <input type="submit" value="Create" class="btn btn-default" />
+	                </div>
+	            </div>
+	        </div>
+	    }
+	</body>
+
+	Model
+	-----
+	using System.ComponentModel.DataAnnotations;
+
+	public class Student
+	{
+	    public int StudentId { get; set; }
+	    [Required]
+	    public string StudentFName { get; set; }
+	    [Required]
+	    public string StudentLName { get; set; }
+	    [Required]
+	    public int Age { get; set; }
+	}
+
+	Controller
+	----------
+	using MVCWebApp.Models;
+
+	public class HomeController : Controller
+	{
+	    public ActionResult Index()
+	    {
+	        return View("Index");
+	    }
+
+	    [HttpPost]
+	    public ActionResult Index(Student std)
+	    {
+	        return View("Index");
+	    }
+	}
+
+
+Custom Error Message
+--------------------
+You can display your own error message instead of the default. Put it either
+
+in the second parameter of ValidationMessageFor()
+
+	@model MVCWebApp.Models.Student
+
+    <div class="form-group">
+        @Html.LabelFor(m => m.StudentName)
+        @Html.TextBoxFor(m => m.StudentName, new { @class = "form-control" })
+        @Html.ValidationMessage("StudentName", "Please enter name", new { @class = "text-danger" })
+    </div>
+
+    (OR)
+
+	@model MVCWebApp.Models.Student
+
+    <div class="form-group">
+        @Html.LabelFor(m => m.StudentName)
+        @Html.TextBoxFor(m => m.StudentName, new { @class = "form-control" })
+        @Html.ValidationMessageFor(model => model.StudentName, "Please enter name", new { @class = "text-danger" })
+    </div>
+
+
+Example - Custom Error Message in ValidationMessage/ValidationMessageFor
+------------------------------------------------------------------------
+
+	View
+	----
+	@model MVCWebApp.Models.Student
+
+	<body>
+	    @using (Html.BeginForm("Index", "Home", FormMethod.Post))
+	    {
+	        @Html.AntiForgeryToken()
+	        <div class="form-horizontal">
+	            <h4>Student</h4>
+	            <div class="form-group">
+	                @Html.LabelFor(m => m.StudentFName)
+	                @Html.TextBoxFor(m => m.StudentFName, new { @class = "form-control" })
+	                @Html.ValidationMessageFor(model => model.StudentFName, "Please enter StudentFName", new { @class = "text-danger" })
+	            </div>
+
+	            <div class="form-group">
+	                @Html.LabelFor(m => m.StudentLName)
+	                @Html.TextBoxFor(m => m.StudentLName, new { @class = "form-control" })
+	                @Html.ValidationMessageFor(model => model.StudentLName, "Please enter StudentLName", new { @class = "text-danger" })
+	            </div>
+
+	            <div class="form-group">
+	                @Html.LabelFor(m => m.Age)
+	                @Html.TextBoxFor(m => m.Age, new { @class = "form-control" })
+	                @Html.ValidationMessageFor(model => model.Age, "Please enter Age", new { @class = "text-danger" })
+	            </div>
+
+	            <div class="form-group">
+	                <div class="col-md-offset-2 col-md-10">
+	                    <input type="submit" value="Create" class="btn btn-default" />
+	                </div>
+	            </div>
+	        </div>
+	    }
+	</body>
+
+	Model
+	-----
+	using System.ComponentModel.DataAnnotations;
+
+	public class Student
+	{
+	    public int StudentId { get; set; }
+	    [Required]
+	    public string StudentFName { get; set; }
+	    [Required]
+	    public string StudentLName { get; set; }
+	    [Required]
+	    public int Age { get; set; }
+	}
+
+	Controller
+	----------
+	using MVCWebApp.Models;
+
+	public class HomeController : Controller
+	{
+	    public ActionResult Index()
+	    {
+	        return View("Index");
+	    }
+
+	    [HttpPost]
+	    public ActionResult Index(Student std)
+	    {
+	        return View("Index");
+	    }
+	}
+
+or in the DataAnnotations attribute like "[Required], [Range(5,50)], etc..."
+
+	using System.ComponentModel.DataAnnotations;
+
+    public class Student
+    {
+        public int StudentId { get; set; }
+        [Required(ErrorMessage = "Please enter name")]
+        public string StudentName { get; set; }
+        [Range(5,50)]
+        public int Age { get; set; }
+    }
+
+Example - Custom Error Message in Model Object
+----------------------------------------------
+
+	View
+	----
+	@model MVCWebApp.Models.Student
+
+	<body>
+	    @using (Html.BeginForm("Index", "Home", FormMethod.Post))
+	    {
+	        @Html.AntiForgeryToken()
+	        <div class="form-horizontal">
+	            <h4>Student</h4>
+	            <div class="form-group">
+	                @Html.LabelFor(m => m.StudentFName)
+	                @Html.TextBoxFor(m => m.StudentFName, new { @class = "form-control" })
+	                @Html.ValidationMessageFor(model => model.StudentFName, "", new { @class = "text-danger" })
+	            </div>
+
+	            <div class="form-group">
+	                @Html.LabelFor(m => m.StudentLName)
+	                @Html.TextBoxFor(m => m.StudentLName, new { @class = "form-control" })
+	                @Html.ValidationMessageFor(model => model.StudentLName, "", new { @class = "text-danger" })
+	            </div>
+
+	            <div class="form-group">
+	                @Html.LabelFor(m => m.Age)
+	                @Html.TextBoxFor(m => m.Age, new { @class = "form-control" })
+	                @Html.ValidationMessageFor(model => model.Age, "", new { @class = "text-danger" })
+	            </div>
+
+	            <div class="form-group">
+	                <div class="col-md-offset-2 col-md-10">
+	                    <input type="submit" value="Create" class="btn btn-default" />
+	                </div>
+	            </div>
+	        </div>
+	    }
+	</body>
+
+	Model
+	-----
+	using System.ComponentModel.DataAnnotations;
+
+    public class Student
+    {
+        public int StudentId { get; set; }
+        [Required(ErrorMessage = "Required StudentFName")]
+        public string StudentFName { get; set; }
+        [Required(ErrorMessage = "Required StudentLName")]
+        public string StudentLName { get; set; }
+        [Required(ErrorMessage = "Required Age")]
+        public int Age { get; set; }
+    }
+
+	Controller
+	----------
+	using MVCWebApp.Models;
+
+	public class HomeController : Controller
+	{
+	    public ActionResult Index()
+	    {
+	        return View("Index");
+	    }
+
+	    [HttpPost]
+	    public ActionResult Index(Student std)
+	    {
+	        return View("Index");
+	    }
+	}
+
+ValidationSummary
+-----------------
+ValidateMessage(bool excludePropertyErrors, string message, object htmlAttributes)
+
+ValidationSummary help to generate an unordered list (ul element) of validation messages for all the fields. It can also be used to display custom error messages. If it is set to true it will show only model-level errors and exclude model property-level but If it's set to false then it shows both model-level and model property-level errors. Model-level errors are those that are not specific to a particular property of model.
+
+    ModelState.AddModelError(string.Empty, "This is model level error!");
+    ModelState.AddModelError("StudentName", "This is model property level error!");
+
+Example
+-------
+	@model MVCWebApp.Models.Student
+
+    @Html.ValidationSummary(false, "", new { @class = "text-danger" })
+    <div class="form-group">
+        @Html.LabelFor(m => m.StudentName)
+        @Html.TextBoxFor(m => m.StudentName, new { @class = "form-control" })
+    </div>
+
+    =>
+
+	<div class="validation-summary-errors text-danger" data-valmsg-summary="true">
+		<ul>
+			<li>Please enter student name.</li>
+			<li>The Age field is required.</li>
+		</ul>
+	</div>
+
+	<div class="form-group">
+		<label for="StudentName">StudentName</label>
+		<input class="input-validation-error form-control" data-val="true" data-val-required="Please enter student name." id="StudentName" name="StudentName" type="text" value="" />
+	</div>
+
+It will display list of error messages as a summary at the top of the page. Please make sure that you don't have a ValidationMessageFor method for each of the fields.
+
+Example - ValidationSummary
+---------------------------
+
+	View
+	----
+	@model MVCWebApp.Models.Student
+
+	<body>
+	    @using (Html.BeginForm("Index", "Home", FormMethod.Post))
+	    {
+	        @Html.AntiForgeryToken()
+	        <div class="form-horizontal">
+	            <h4>Student</h4>
+	            @Html.ValidationSummary(false, "", new { @class = "text-danger" })
+	            <div class="form-group">
+	                @Html.LabelFor(m => m.StudentFName)
+	                @Html.TextBoxFor(m => m.StudentFName, new { @class = "form-control" })
+	            </div>
+
+	            <div class="form-group">
+	                @Html.LabelFor(m => m.StudentLName)
+	                @Html.TextBoxFor(m => m.StudentLName, new { @class = "form-control" })
+	            </div>
+
+	            <div class="form-group">
+	                @Html.LabelFor(m => m.Age)
+	                @Html.TextBoxFor(m => m.Age, new { @class = "form-control" })
+	            </div>
+
+	            <div class="form-group">
+	                <div class="col-md-offset-2 col-md-10">
+	                    <input type="submit" value="Create" class="btn btn-default" />
+	                </div>
+	            </div>
+	        </div>
+	    }
+	</body>
+
+	Model
+	-----
+	using System.ComponentModel.DataAnnotations;
+
+    public class Student
+    {
+        public int StudentId { get; set; }
+        [Required]
+        public string StudentFName { get; set; }
+        [Required]
+        public string StudentLName { get; set; }
+        [Required]
+        public int Age { get; set; }
+    }
+
+	Controller
+	----------
+	using MVCWebApp.Models;
+
+	public class HomeController : Controller
+	{
+	    public ActionResult Index()
+	    {
+	        return View("Index");
+	    }
+
+	    [HttpPost]
+	    public ActionResult Index(Student std)
+	    {
+	        return View("Index");
+	    }
+	}
+
+Custom Error Message
+--------------------
+Suppose we want to display a message if Student First Name is same as Last name then add custom errors message to 'ModelState'
+
+	@model MVCWebApp.Models.Student
+
+    @Html.ValidationSummary(false, "", new { @class = "text-danger" })
+    <div class="form-group">
+        @Html.LabelFor(m => m.StudentFName)
+        @Html.TextBoxFor(m => m.StudentFName, new { @class = "form-control" })
+    </div>
+
+    <div class="form-group">
+        @Html.LabelFor(m => m.StudentLName)
+        @Html.TextBoxFor(m => m.StudentLName, new { @class = "form-control" })
+    </div>
+
+    =>
+
+	<div class="validation-summary-errors text-danger" data-valmsg-summary="true">
+		<ul>
+			<li>The StudentFName field is required.</li>
+			<li>The StudentLName field is required.</li>
+			<li>The last name cannot be the same as the first name.</li>
+			<li>The Age field is required.</li>
+		</ul>
+	</div>
+
+	<div class="form-group">
+		<label for="StudentFName">StudentFName</label>
+		<input class="input-validation-error form-control" data-val="true" data-val-required="The StudentFName field is required." id="StudentFName" name="StudentFName" type="text" value="">
+	</div>
+
+	<div class="form-group">
+		<label for="StudentLName">StudentLName</label>
+		<input class="input-validation-error form-control" data-val="true" data-val-required="The StudentLName field is required." id="StudentLName" name="StudentLName" type="text" value="">
+	</div>
+
+
+Example - ValidationSummary Custom Error Message - model property-level error message
+-------------------------------------------------------------------------------------
+
+	View
+	----
+	@model MVCWebApp.Models.Student
+
+	<body>
+	    @using (Html.BeginForm("Index", "Home", FormMethod.Post))
+	    {
+	        @Html.AntiForgeryToken()
+	        <div class="form-horizontal">
+	            <h4>Student</h4>
+	            @Html.ValidationSummary(false, "", new { @class = "text-danger" })
+	            <div class="form-group">
+	                @Html.LabelFor(m => m.StudentFName)
+	                @Html.TextBoxFor(m => m.StudentFName, new { @class = "form-control" })
+	            </div>
+
+	            <div class="form-group">
+	                @Html.LabelFor(m => m.StudentLName)
+	                @Html.TextBoxFor(m => m.StudentLName, new { @class = "form-control" })
+	            </div>
+
+	            <div class="form-group">
+	                @Html.LabelFor(m => m.Age)
+	                @Html.TextBoxFor(m => m.Age, new { @class = "form-control" })
+	            </div>
+
+	            <div class="form-group">
+	                <div class="col-md-offset-2 col-md-10">
+	                    <input type="submit" value="Create" class="btn btn-default" />
+	                </div>
+	            </div>
+	        </div>
+	    }
+	</body>
+
+	Model
+	-----
+	using System.ComponentModel.DataAnnotations;
+
+    public class Student
+    {
+        public int StudentId { get; set; }
+        [Required]
+        public string StudentFName { get; set; }
+        [Required]
+        public string StudentLName { get; set; }
+        [Required]
+        public int Age { get; set; }
+    }
+
+	Controller
+	----------
+	using MVCWebApp.Models;
+
+	public class HomeController : Controller
+	{
+	    public ActionResult Index()
+	    {
+	        return View("Index");
+	    }
+
+        [HttpPost]
+        public ActionResult Index(Student std)
+        {
+            
+            if (std.StudentFName == std.StudentLName)
+            {
+                ModelState.AddModelError("StudentLName", "The last name cannot be the same as the first name.");
+            }
+
+            if (ModelState.IsValid)
+            {
+                return View("Index");
+            }
+            
+            return View("Index");
+        }
+	}
+
+Example - ValidationSummary Custom Error Message - model level error message
+----------------------------------------------------------------------------
+
+	View
+	----
+	@model MVCWebApp.Models.Student
+
+	<body>
+	    @using (Html.BeginForm("Index", "Home", FormMethod.Post))
+	    {
+	        @Html.AntiForgeryToken()
+	        <div class="form-horizontal">
+	            <h4>Student</h4>
+	            @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+	            <div class="form-group">
+	                @Html.LabelFor(m => m.StudentFName)
+	                @Html.TextBoxFor(m => m.StudentFName, new { @class = "form-control" })
+	            </div>
+
+	            <div class="form-group">
+	                @Html.LabelFor(m => m.StudentLName)
+	                @Html.TextBoxFor(m => m.StudentLName, new { @class = "form-control" })
+	            </div>
+
+	            <div class="form-group">
+	                @Html.LabelFor(m => m.Age)
+	                @Html.TextBoxFor(m => m.Age, new { @class = "form-control" })
+	            </div>
+
+	            <div class="form-group">
+	                <div class="col-md-offset-2 col-md-10">
+	                    <input type="submit" value="Create" class="btn btn-default" />
+	                </div>
+	            </div>
+	        </div>
+	    }
+	</body>
+
+	Model
+	-----
+	using System.ComponentModel.DataAnnotations;
+
+    public class Student
+    {
+        public int StudentId { get; set; }
+        [Required]
+        public string StudentFName { get; set; }
+        [Required]
+        public string StudentLName { get; set; }
+        [Required]
+        public int Age { get; set; }
+    }
+
+	Controller
+	----------
+	using MVCWebApp.Models;
+
+	public class HomeController : Controller
+	{
+	    public ActionResult Index()
+	    {
+	        return View("Index");
+	    }
+
+        [HttpPost]
+        public ActionResult Index(Student std)
+        {
+            
+            if (std.StudentFName == std.StudentLName)
+            {
+                ModelState.AddModelError(string.Empty, "The last name cannot be the same as the first name.");
+            }
+
+            if (ModelState.IsValid)
+            {
+                return View("Index");
+            }
+            
+            return View("Index");
+        }
+	}
+
 
 Controller
 ----------
