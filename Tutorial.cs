@@ -1748,3 +1748,728 @@ Now, after configuring all the routes in RouteConfig class, you need to register
 			BundleConfig.RegisterBundles(BundleTable.Bundles);
 		}
 	}
+
+Exception handling
+------------------
+Exception handling is the process of responding to the occurrence of exceptional conditions requiring special processing. There are two critical things that you need accomplish while handling error
+
+	a) Gracefully handling errors and show users a friendly error page instead of standard yellow ASP.NET error screen.
+	b) Logging errors so that you can take care of them
+
+There are 6 ways of handling exceptions in ASP.NET MVC.
+
+	a) Try-catch-finally
+	b) Overriding OnException method
+	c) Using the [HandleError] attribute on actions and controllers
+	d) Setting a global exception handling filter
+	e) Handling Application_Error event
+	f) Extending HandleErrorAttribute
+	g) Handling HTTP errors
+
+Error Logging
+-------------
+Logging is a method of tracking/monitoring when an application is running. If something goes wrong in your application Logging will help to locate that error. We will use 'Log4Net' to do that. It has following methods
+
+	a) Debug
+	b) Information
+	c) Warnings
+	d) Error
+	e) Fatal
+
+Step01: Install 'Log4Net' from Tools->Nuget Package manager->Manage Nuget Package.
+------
+
+Step02: Add the below code to 'Web.config'.
+------
+	<configuration>
+		<configSections>
+			<section name="log4net" type="log4net.Config.Log4NetConfigurationSectionHandler, log4net" />
+		</configSections>
+		<log4net>
+			<appender name="RollingLogFileAppender" type="log4net.Appender.RollingFileAppender">
+				<file value="C:\\logfile.txt" />
+				<appendToFile value="false" />
+				<rollingStyle value="Size" />
+				<maxSizeRollBackups value="-1" />
+				<maximumFileSize value="50GB" />
+				<layout type="log4net.Layout.PatternLayout">
+					<conversionPattern value="%date [%thread] %-5level %logger [%property{NDC}] - %message%newline" />
+				</layout>
+			</appender>
+			<root>
+				<level value="DEBUG" />
+				<appender-ref ref="RollingLogFileAppender" />
+			</root>
+		</log4net>
+		....
+	</configuration>
+
+Step03: Add the below code to 'Global.asax'.
+------
+    protected void Application_Start()
+    {
+        AreaRegistration.RegisterAllAreas();
+        log4net.Config.XmlConfigurator.Configure(); // This line
+        RouteConfig.RegisterRoutes(RouteTable.Routes);
+    }
+
+Step04: Add the below code to your controller 'HomeController.cs'.
+------
+	using log4net;
+
+	public class HomeController : Controller
+	{
+		private static readonly ILog log = LogManager.GetLogger(typeof(HomeController));
+
+		public ActionResult Index()
+		{
+			try
+			{
+				int i = 10;
+				i = i / 0;
+				return View();
+			}
+			catch (Exception ex)
+			{
+				log.Info("Info => " + ex);
+				log.Fatal("Fatal => " + ex);
+				log.Error("Error => " + ex);
+				log.Warn("Warn => " + ex);
+				log.Debug("Debug => " + ex);
+				return View("Error", ex);
+			}
+		}
+	}
+
+Step05: Look for 'C:\\logfile.txt' to check the message you log.
+------
+
+Try-catch-finally
+-----------------
+Tradintional way of handling Exception. When exception happens catch block gets executed and it redirects to the error view. However, you can have multiple catch blocks for a try block. Even you can have Try-Catch blocks inside a Try block. In an actual project we can also use the catch block to log the error.
+
+To do this, create error view under Views/Shared/Error.cshtml
+
+	View - Error.cshtml
+	-------------------
+	@{
+	    ViewBag.Title = "Error";
+	    Layout = "~/Views/Shared/_Layout.cshtml";
+	}
+
+	<h2>Error</h2>
+
+	Controller
+	----------
+		using log4net;
+
+	    public class HomeController : Controller
+	    {
+	        public ActionResult Index()
+	        {
+	            try
+	            {
+	                int i = 10;
+	                i = i / 0;
+	                return View();
+	            }
+	            catch (Exception ex)
+	            {
+	                log.Error("Error => " + ex);
+	                return View("Error", ex);
+	            }
+	            finally
+	            {
+
+	            }
+	        }
+	    }
+
+Overriding OnException method
+-----------------------------
+Handle controller level exceptions, does not require to enable the <customErrors> config in web.config. It handles all unhandled errors with error code 500. It also gives you the ability to log the errors. 'OnException' is a void method that takes an argument, ExceptionContext that has all the information about exception which can be used to log error. We can handle the exception generated from all the actions from a specific controller.
+
+To do this, create two error view 
+
+	a) Views/Shared/Error.cshtml and 
+	b) Views/Error/InternalError.cshtml
+
+	View - Error.cshtml
+	-------------------
+	@{
+	    ViewBag.Title = "Error";
+	    Layout = "~/Views/Shared/_Layout.cshtml";
+	}
+
+	<h2>Error</h2>
+
+	View - InternalError.cshtml
+	---------------------------
+	@{
+	    ViewBag.Title = "InternalError";
+	    Layout = "~/Views/Shared/_Layout.cshtml";
+	}
+
+	<h2>InternalError</h2>
+
+
+	Controller
+	----------
+	using log4net;
+
+    public class HomeController : Controller
+    {
+        private static readonly ILog log = LogManager.GetLogger(typeof(HomeController));
+
+        public ActionResult Index()
+        {
+            int i = 10;
+            i = i / 0;
+            return View();
+        }
+
+        protected override void OnException(ExceptionContext filterContext)
+        {
+            filterContext.ExceptionHandled = true;
+
+            // log the error using log4net.
+            var controllerName = (string)filterContext.RouteData.Values["controller"];
+            var actionName = (string)filterContext.RouteData.Values["action"];
+            var statuscode = filterContext.HttpContext.Response.StatusCode;
+            log.Error(filterContext.Exception.Message + "+" + controllerName + "+" + actionName + "+" + statuscode, filterContext.Exception);
+
+
+            //Redirect to default error view. RedirectToAction(“ActionName”,”ControllerName”);
+            filterContext.Result = RedirectToAction("ErrorHandler", "Home");
+
+            // (OR)
+
+            //return specific view
+            filterContext.Result = new ViewResult()
+            {
+                ViewName = "~/Views/Error/InternalError.cshtml"
+            };
+
+            // (OR)
+
+            //the above method can write this way
+            ViewResult view = new ViewResult();
+            view.ViewName = "~/Views/Error/InternalError.cshtml";
+            filterContext.Result = view;
+        }
+
+        public ActionResult ErrorHandler()
+        {
+            return View("Error");
+        }
+
+    }
+
+In the above scenarios, we have to handle the exception in every controller. To overcome this, we can create a BaseController class which will implement the Controller class and all controllers will implement Base Contoller class
+
+
+	View - Error.cshtml
+	-------------------
+	@{
+	    ViewBag.Title = "Error";
+	    Layout = "~/Views/Shared/_Layout.cshtml";
+	}
+
+	<h2>Error</h2>
+
+	View - InternalError.cshtml
+	---------------------------
+	@{
+	    ViewBag.Title = "InternalError";
+	    Layout = "~/Views/Shared/_Layout.cshtml";
+	}
+
+	<h2>InternalError</h2>
+
+
+	Controller - BaseController
+	---------------------------
+	using log4net;
+
+    public class BaseController : Controller
+    {
+    	private static readonly ILog log = LogManager.GetLogger(typeof(HomeController));
+
+        protected override void OnException(ExceptionContext filterContext)
+        {
+            filterContext.ExceptionHandled = true;
+
+            // log the error using log4net.
+            var controllerName = (string)filterContext.RouteData.Values["controller"];
+            var actionName = (string)filterContext.RouteData.Values["action"];
+            var statuscode = filterContext.HttpContext.Response.StatusCode;
+            log.Error(filterContext.Exception.Message + "+" + controllerName + "+" + actionName + "+" + statuscode, filterContext.Exception);
+
+
+            //Redirect to default error view. RedirectToAction(“ActionName”,”ControllerName”);
+            filterContext.Result = RedirectToAction("ErrorHandler", "Home");
+
+            // (OR)
+
+            //return specific view
+            filterContext.Result = new ViewResult()
+            {
+                ViewName = "~/Views/Error/InternalError.cshtml"
+            };
+
+            // (OR)
+
+            //the above method can write this way
+            ViewResult view = new ViewResult();
+            view.ViewName = "~/Views/Error/InternalError.cshtml";
+            filterContext.Result = view;
+        }
+    }
+
+	Controller - HomeController
+	---------------------------
+    public class HomeController : BaseController
+    {
+        public ActionResult Index()
+        {
+            int i = 10;
+            i = i / 0;
+            return View();
+        }
+ 
+        public ActionResult ErrorHandler()
+        {
+            return View("Error");
+        }
+    }
+
+[HandleError] attribute on actions and controllers
+--------------------------------------------------
+HandleError attribute provides a built-in exception filter. It can be applied to an entire controller or individual action methods. It can only handle 500 level errors and it does not provide error logging.
+
+Step01: Add <customErrors mode="On" ></customErrors> in 'web.config' under <system.web>
+------
+
+Step02: Decorate the action with [HandleError] as
+------
+    [HandleError]
+    public ActionResult Index()
+    {
+        int i = 10;
+        i = i / 0;
+        return View();
+    }
+
+Create error view under Views/Shared/Error.cshtml
+
+	View - Error.cshtml
+	-------------------
+	@{
+	    ViewBag.Title = "Error";
+	    Layout = "~/Views/Shared/_Layout.cshtml";
+	}
+
+	<h2>Error</h2>
+
+	Controller
+	----------
+    public class HomeController : Controller
+    {
+        [HandleError]
+        public ActionResult Index()
+        {
+            int i = 10;
+            i = i / 0;
+            return View();
+        }
+    }
+
+We can add it at controller level and it will be applicable to all the action methods present in the controller
+
+	View - Error.cshtml
+	-------------------
+	@{
+	    ViewBag.Title = "Error";
+	    Layout = "~/Views/Shared/_Layout.cshtml";
+	}
+
+	<h2>Error</h2>
+
+	Controller
+	----------
+	[HandleError]
+    public class HomeController : Controller
+    {        
+        public ActionResult Index()
+        {
+            int i = 10;
+            i = i / 0;
+            return View();
+        }
+        
+        public ActionResult Div()
+        {
+            int i = 10;
+            i = i / 0;
+            return View();
+        }
+
+    }
+
+We can handle a different exception with a different view
+
+	View - Error.cshtml
+	-------------------
+	@{
+	    ViewBag.Title = "Error";
+	    Layout = "~/Views/Shared/_Layout.cshtml";
+	}
+
+	<h2>Error</h2>
+
+	View - MathRelatedError.cshtml
+	------------------------------
+	@{
+	    ViewBag.Title = "Error";
+	    Layout = "~/Views/Shared/_Layout.cshtml";
+	}
+
+	<h2>Math Related Error</h2>
+
+	View - InternalError.cshtml
+	---------------------------
+	@{
+	    ViewBag.Title = "Error";
+	    Layout = "~/Views/Shared/_Layout.cshtml";
+	}
+
+	<h2>Internal Error</h2>
+
+	Controller
+	----------
+    public class HomeController : Controller
+    {
+        [HandleError]
+        [HandleError(ExceptionType = typeof(DivideByZeroException), View = "~/Views/Error/MathRelatedError.cshtml")]
+        [HandleError(ExceptionType = typeof(ArgumentOutOfRangeException), View = "~/Views/Error/InternalError.cshtml")]
+        public ActionResult Index()
+        {
+            int i = 10;
+            i = i / 0;
+            return View();
+        }
+    }
+
+Setting a global exception handling filter
+------------------------------------------
+For this we need to ensure that 'HandleErrorAttribute' is added in 'RegisterGlobalFilters' of the 'FilterConfig' file of 'App_start' and registered in 'Application_Start'. No need to decorate our action and controller with [HandleError].
+
+Step01: Add <customErrors mode="On" ></customErrors> in 'web.config' under <system.web>
+------
+
+Step02: Create 'App_Start\FilterConfig.cs' with below code
+------
+	public class FilterConfig
+	{
+		public static void RegisterGlobalFilters(GlobalFilterCollection filters)
+		{
+			filters.Add(new HandleErrorAttribute());
+		}
+	}
+
+Step03: Add 'FilterConfig.cs' in 'Global.asax'
+------
+    protected void Application_Start()
+    {
+        AreaRegistration.RegisterAllAreas();
+        FilterConfig.RegisterGlobalFilters(GlobalFilters.Filters);
+        RouteConfig.RegisterRoutes(RouteTable.Routes);
+    }
+
+Create error view under Views/Shared/Error.cshtml
+
+	View - Error.cshtml
+	-------------------
+	@{
+	    ViewBag.Title = "Error";
+	    Layout = "~/Views/Shared/_Layout.cshtml";
+	}
+
+	<h2>Error</h2>
+
+	Controller
+	----------
+    public class HomeController : Controller
+    {
+        public ActionResult Index()
+        {
+            int i = 10;
+            i = i / 0;
+            return View();
+        }
+    }
+
+Extending HandleErrorAttribute
+------------------------------
+We can also create our own Exception Handler by inheriting from HandleErrorAttribute
+
+	View - InternalError.cshtml
+	---------------------------
+	@{
+	    ViewBag.Title = "Error";
+	    Layout = "~/Views/Shared/_Layout.cshtml";
+	}
+
+	<h2>Internal Error</h2>
+
+	Handler
+	-------
+	'MyExceptionHandler' should be inside the 'Controllers' folder
+
+	    public class MyExceptionHandler: HandleErrorAttribute
+	    {
+	        private static readonly ILog log = LogManager.GetLogger(typeof(HomeController));
+
+	        public override void OnException(ExceptionContext filterContext)
+	        {
+	            filterContext.ExceptionHandled = true;
+
+	            // log the error using log4net.
+	            var controllerName = (string)filterContext.RouteData.Values["controller"];
+	            var actionName = (string)filterContext.RouteData.Values["action"];
+	            log.Error(filterContext.Exception.Message + "+" + controllerName + "+" + actionName, filterContext.Exception);
+
+	            //return specific view
+	            filterContext.Result = new ViewResult()
+	            {
+	                ViewName = "~/Views/Error/InternalError.cshtml"
+	            };
+
+	            // (OR)
+
+	            //the above method can write this way
+	            ViewResult view = new ViewResult();
+	            view.ViewName = "~/Views/Error/InternalError.cshtml";
+	            filterContext.Result = view;
+	        }
+	    }
+
+	Controller
+	----------
+    public class HomeController : Controller
+    {
+        [MyExceptionHandler]
+        public ActionResult Index()
+        {
+            int i = 10;
+            i = i / 0;
+            return View();
+        }
+    }
+
+Pass Exception, Controller Name and Method name to error view to display error page more informative.
+
+	View - FormattedError.cshtml
+	----------------------------
+	@{
+	    ViewBag.Title = "FormattedError";
+	    Layout = "~/Views/Shared/_Layout.cshtml";
+	}
+
+	<div>  
+	    <h2>Formatted Error</h2>
+
+		@model System.Web.Mvc.HandleErrorInfo  
+		  
+		@if (Model != null)  
+		{  
+		    <div>  
+	            <h2>
+	                @Model.Exception.Message in @Model.ControllerName and @Model.ActionName
+	            </h2>  
+		  
+		    </div>  
+		}  
+	  
+	</div>
+
+	Handler
+	-------
+    public class MyExceptionHandler: HandleErrorAttribute
+    {
+        private static readonly ILog log = LogManager.GetLogger(typeof(HomeController));
+
+        public override void OnException(ExceptionContext filterContext)
+        {
+            filterContext.ExceptionHandled = true;
+
+            // log the error using log4net.
+            var controllerName = (string)filterContext.RouteData.Values["controller"];
+            var actionName = (string)filterContext.RouteData.Values["action"];
+            log.Error(filterContext.Exception.Message + "+" + controllerName + "+" + actionName, filterContext.Exception);
+
+            var model = new HandleErrorInfo(filterContext.Exception, controllerName, actionName);
+
+            //return specific view
+            filterContext.Result = new ViewResult()
+            {
+                ViewName = "~/Views/Error/FormattedError.cshtml",
+                ViewData = new ViewDataDictionary(model)
+            };
+        }
+    }
+
+	Controller
+	----------
+    public class HomeController : Controller
+    {
+        [MyExceptionHandler]
+        public ActionResult Index()
+        {
+            int i = 10;
+            i = i / 0;
+            return View();
+        }
+    }
+
+Handling HTTP errors
+--------------------
+We will handle HTTP errors like file not found 404, HTTP 500 error and other 4xx and 5xx
+
+Step01: Add below code in 'web.config' under <system.web>
+------
+	  <customErrors mode="On" defaultRedirect="~/Error/Index">
+		  <error statusCode="404" redirect="~/Error/NotFound"/>
+	  </customErrors>
+
+Step02: Create 'ErrorController'
+------
+
+Step03: Add 'Error.cshtml' and 'NotFound.cshtml' in 'Views/Shared'
+------
+
+Step04: Create 'HomeController' from where error occured first
+------
+
+	Web.config
+	----------
+	<system.web>
+	  <customErrors mode="On" defaultRedirect="~/Error/Index">
+		  <error statusCode="404" redirect="~/Error/NotFound"/>
+	  </customErrors>
+	  ...
+	</system.web>
+
+
+	View - Views/Shared/Error.cshtml
+	--------------------------------
+	@{
+	    ViewBag.Title = "Error";
+	    Layout = "~/Views/Shared/_Layout.cshtml";
+	}
+
+	<h2>Error</h2>
+
+
+	View - Views/Shared/NotFound.cshtml
+	-----------------------------------
+	@{
+	    ViewBag.Title = "Error";
+	    Layout = "~/Views/Shared/_Layout.cshtml";
+	}
+
+	<div>
+	    <h2>Not Found</h2>
+
+	    @model System.Web.Mvc.HandleErrorInfo
+
+	    @if (Model != null)
+	    {
+	        <div>
+	            <h2>
+	                @Model.Exception.Message in @Model.ControllerName and @Model.ActionName
+	            </h2>
+
+	        </div>
+	    }
+	</div>
+
+
+	Controller - ErrorController
+	----------------------------
+    public class ErrorController : Controller
+    {
+        public ActionResult Index()
+        {
+            return View("Error");
+        }
+
+        public ActionResult NotFound()
+        {            
+            return View("NotFound", new HandleErrorInfo(new HttpException(404, "page not found"), "ErrorController", "NotFound"));
+        }
+    }
+
+	Controller - HomeController
+	---------------------------
+    public class HomeController : Controller
+    {
+        public ActionResult Index()
+        {
+            int i = 10;
+            i = i / 0;
+            return View();
+        }
+    }
+
+Handling Application_Error event
+--------------------------------
+If you want to do global exception handling across your application, you can override the “Application_Error” event in “Global.asax”. If error handling is not done at the controller level “Application_Error” event can take care of it. You can log all unhandled exceptions that may occur within your application.
+
+	Global.asax
+	-----------
+    public class MvcApplication : System.Web.HttpApplication
+    {
+        protected void Application_Start()
+        {
+            AreaRegistration.RegisterAllAreas();
+            //FilterConfig.RegisterGlobalFilters(GlobalFilters.Filters);
+            RouteConfig.RegisterRoutes(RouteTable.Routes);
+        }
+
+        protected void Application_Error() 
+        {
+            var Exception = Server.GetLastError();
+            Server.ClearError();
+            Response.Redirect("Error"); //Views/Shared/Error.cshtml
+        }
+    }
+
+Logging error across your application
+
+	Global.asax
+	-----------
+    public class MvcApplication : System.Web.HttpApplication
+    {
+        private static readonly ILog log = LogManager.GetLogger(typeof(MvcApplication));
+
+        protected void Application_Start()
+        {
+            AreaRegistration.RegisterAllAreas();
+            log4net.Config.XmlConfigurator.Configure();
+            //FilterConfig.RegisterGlobalFilters(GlobalFilters.Filters);
+            RouteConfig.RegisterRoutes(RouteTable.Routes);
+        }
+
+        protected void Application_Error() 
+        {
+            var Exception = Server.GetLastError();
+            Server.ClearError();
+            
+            //Logging error
+            log.Error(Exception.Message, Exception);
+
+            //Redirecting to error page
+            Response.Redirect("Error");
+        }
+    }
