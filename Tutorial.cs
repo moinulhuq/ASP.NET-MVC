@@ -2473,3 +2473,352 @@ Logging error across your application
             Response.Redirect("Error");
         }
     }
+
+Layout View
+-----------
+The layout view is a common site template, which can be inherited in multiple views. It eliminates duplicate coding. Layout views are shared with multiple views, so it must be stored in the Shared folder.
+
+	<!DOCTYPE html>
+	<html>
+	<head>
+	    <meta charset="utf-8" />
+	    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	    <title>@ViewBag.Title - My ASP.NET Application</title>
+	    <link href="~/Content/Site.css" rel="stylesheet" type="text/css" />
+	    <link href="~/Content/bootstrap.min.css" rel="stylesheet" type="text/css" />
+	    <script src="~/Scripts/modernizr-2.8.3.js"></script>
+	</head>
+	<body>
+	    <div class="navbar navbar-inverse navbar-fixed-top">
+	        <div class="container">
+	            <div class="navbar-header">
+	                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+	                    <span class="icon-bar"></span>
+	                    <span class="icon-bar"></span>
+	                    <span class="icon-bar"></span>
+	                </button>
+	                @Html.ActionLink("Application name", "Index", "Home", new { area = "" }, new { @class = "navbar-brand" })
+	            </div>
+	            <div class="navbar-collapse collapse">
+	                <ul class="nav navbar-nav">
+	                </ul>
+	            </div>
+	        </div>
+	    </div>
+
+	    <div class="container body-content">
+	        @RenderBody()
+	        <hr />
+	        <footer>
+	            <p>&copy; @DateTime.Now.Year - My ASP.NET Application</p>
+	        </footer>
+	    </div>
+
+	    <script src="~/Scripts/jquery-3.4.1.min.js"></script>
+	    <script src="~/Scripts/bootstrap.min.js"></script>
+	</body>
+	</html>
+
+RenderBody
+----------
+RenderBody() acts like a placeholder in 'Layout View'. 'Index.cshtml' will be injected and rendered in the layout view. 
+
+We can set the layout view in multiple ways
+
+	a) Using _ViewStart.cshtml 
+	b) Setting Layout property in individual view 
+	c) Specify Layout Page in ActionResult Method
+
+Using _ViewStart.cshtml
+-----------------------
+'_ViewStart.cshtml' is included in the root of Views folder. '_ViewStart.cshtml' can also be included in sub folder of View folder to set the default layout page of that particular subfolder only.
+
+	_ViewStart.cshtml
+	-----------------
+	@{
+	    Layout = "~/Views/Shared/_Layout.cshtml";
+	}
+
+Setting Layout property in individual view
+------------------------------------------
+You can override default layout page set by _ViewStart.cshtml by setting Layout property in each individual view
+
+	Index.cshtml
+	------------
+	@{
+	    ViewBag.Title = "Index";
+	    Layout = "~/Views/Shared/_Layout.cshtml";
+	}
+
+    <div class="jumbotron">
+        <h1>ASP.NET</h1>
+        <p>ASP.NET is a free web framework for building great Web sites and Web applications using HTML, CSS and JavaScript.</p>
+    </div>
+
+Specify Layout Page in ActionResult Method
+------------------------------------------
+You can specify layout page in action method using View() method
+
+	HomeController
+	--------------
+    public class HomeController : Controller
+    {
+        public ActionResult Index()
+        {
+            return View("Index", "~/Views/Shared/_Layout.cshtml");
+        }
+    }
+
+RenderSection
+-------------
+RenderSection separate content from layout, allows us to designate a place where content will be rendered and it is different from RenderBody().
+
+	_Layout.cshtml
+	--------------
+	<!DOCTYPE html>
+	<html>
+	<head>
+	    <meta charset="utf-8" />
+	    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	    <title>@ViewBag.Title - My ASP.NET Application</title>
+	    <link href="~/Content/Site.css" rel="stylesheet" type="text/css" />
+	    <link href="~/Content/bootstrap.min.css" rel="stylesheet" type="text/css" />
+	    <script src="~/Scripts/modernizr-2.8.3.js"></script>
+	</head>
+	<body>
+	    <div class="navbar navbar-inverse navbar-fixed-top">
+	        <div class="container">
+	            <div class="navbar-header">
+	                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+	                    <span class="icon-bar"></span>
+	                    <span class="icon-bar"></span>
+	                    <span class="icon-bar"></span>
+	                </button>
+	                @Html.ActionLink("Application name", "Index", "Home", new { area = "" }, new { @class = "navbar-brand" })
+	            </div>
+	            <div class="navbar-collapse collapse">
+	                <ul class="nav navbar-nav">
+	                </ul>
+	            </div>
+	        </div>
+	    </div>
+
+	    <div class="container body-content">
+	        @RenderBody()
+	        <hr />
+	        <footer>
+	            @RenderSection("footer", required: false)
+	            <p>&copy; @DateTime.Now.Year - My ASP.NET Application</p>
+	        </footer>
+	    </div>
+
+	    <script src="~/Scripts/jquery-3.4.1.min.js"></script>
+	    <script src="~/Scripts/bootstrap.min.js"></script>	    
+	</body>
+	</html>
+
+	Index.cshtml
+	------------
+	@{
+	    ViewBag.Title = "Index";
+	    Layout = "~/Views/Shared/_Layout.cshtml";
+	}
+
+	<div class="jumbotron">
+	    <h1>ASP.NET</h1>
+	    <p>ASP.NET is a free web framework for building great Web sites and Web applications using HTML, CSS and JavaScript.</p>
+	</div>
+
+	@section Footer
+	{
+	    <p>Section/Index page</p>
+	}
+
+Partial View
+------------
+Partial view is a reusable view. It can be used as partial view in the layout view, as well as other content views. You can render the partial view in the parent view (_Layout.cshtml) using html helper methods Partial() or RenderPartial() or Action() or RenderAction()
+
+Partial or RenderPartial
+------------------------
+Seperate navigation bar code from '_Layout.cshtml' and save that code as partial view. To do that right click on Shared folder -> select Add -> click on View. In Add View dialogue, enter View name and select "Create as a partial view" checkbox and click Add.
+
++------------------------------------------------------------------------------+--------------------------------------------------------+
+|                                Html.Partial()                                |                  Html.RenderPartial()                  |
++------------------------------------------------------------------------------+--------------------------------------------------------+
+| Html.Partial returns html string.                                            | Html.RenderPartial returns void.                       |
+| Html.Partial injects the html string of the partial view into the main view. | Html.RenderPartial writes html in the response stream. |
+| Performance is slow.                                                         | Perform is faster compared with HtmlPartial().         |
+| Html.Partial() need not to be inside the braces.                             | Html.RenderPartial must be inside braces @{ }.         |
++------------------------------------------------------------------------------+--------------------------------------------------------+
+
+	_HeaderNavBar.cshtml
+	--------------------
+	<div class="navbar navbar-inverse navbar-fixed-top">
+	    <div class="container">
+	        <div class="navbar-header">
+	            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+	                <span class="icon-bar"></span>
+	                <span class="icon-bar"></span>
+	                <span class="icon-bar"></span>
+	            </button>
+	            @Html.ActionLink("Application name", "Index", "Home", new { area = "" }, new { @class = "navbar-brand" })
+	        </div>
+	        <div class="navbar-collapse collapse">
+	            <ul class="nav navbar-nav">
+	            </ul>
+	        </div>
+	    </div>
+	</div>
+
+	_Layout.cshtml
+	--------------
+	<!DOCTYPE html>
+	<html>
+	<head>
+	    <meta charset="utf-8" />
+	    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	    <title>@ViewBag.Title - My ASP.NET Application</title>
+	    <link href="~/Content/Site.css" rel="stylesheet" type="text/css" />
+	    <link href="~/Content/bootstrap.min.css" rel="stylesheet" type="text/css" />
+	    <script src="~/Scripts/modernizr-2.8.3.js"></script>
+	</head>
+	<body>
+		
+		@Html.Partial("_HeaderNavBar")
+
+		(OR)
+
+	    @{
+	      Html.RenderPartial("_HeaderNavBar");   
+	    }
+
+	    <div class="container body-content">
+	        @RenderBody()
+	        <hr />
+	        <footer>
+	            @RenderSection("footer", required: false)
+	            <p>&copy; @DateTime.Now.Year - My ASP.NET Application</p>
+	        </footer>
+	    </div>
+
+	    <script src="~/Scripts/jquery-3.4.1.min.js"></script>
+	    <script src="~/Scripts/bootstrap.min.js"></script>	    
+	</body>
+	</html>
+
+Action or RenderAction
+----------------------
+Seperate 'Student registration form' from 'Index.cshtml' and save that code as partial view. To do that right click on Shared folder -> select Add -> click on View. In Add View dialogue, enter View name and select "Create as a partial view" checkbox and click Add.
+
++------------------------------------------------------------------------------+--------------------------------------------------------+
+|                                Html. Action ()                               |                  Html. RenderAction ()                 |
++------------------------------------------------------------------------------+--------------------------------------------------------+
+| Html.Action returns html string.                                             | Html.RenderAction returns void.                        |
+| Html.Action injects the html string of the partial view into the main view.  | Html.RenderAction writes html in the response stream.  |
+| Performance is slow.                                                         | Perform is faster compared with Action().              |
+| Html.Partial() need not to be inside the braces.                             | Html. RenderAction must be inside braces @{ }.         |
++------------------------------------------------------------------------------+--------------------------------------------------------+
+
+	_StudentForm.cshtml
+	-------------------
+	@model MVCWebApp.Models.Student
+
+	@using (Html.BeginForm("Index", "Home", FormMethod.Post))
+	{
+	    @Html.AntiForgeryToken()
+	    <div class="form-horizontal">
+	        <h4>Student</h4>
+	        @Html.ValidationSummary(false, "", new { @class = "text-danger" })
+	        <div class="form-group">
+	            @Html.LabelFor(m => m.StudentFName)
+	            @Html.TextBoxFor(m => m.StudentFName, new { @class = "form-control" })
+	        </div>
+
+	        <div class="form-group">
+	            @Html.LabelFor(m => m.StudentLName)
+	            @Html.TextBoxFor(m => m.StudentLName, new { @class = "form-control" })
+	        </div>
+
+	        <div class="form-group">
+	            @Html.LabelFor(m => m.Age)
+	            @Html.TextBoxFor(m => m.Age, new { @class = "form-control" })
+	        </div>
+
+	        <div class="form-group">
+	            <div class="col-md-offset-2 col-md-10">
+	                <input type="submit" value="Create" class="btn btn-default" />
+	            </div>
+	        </div>
+	    </div>
+	}
+
+	Index.cshtml
+	------------
+	@{
+	    ViewBag.Title = "Index";
+	    Layout = "~/Views/Shared/_Layout.cshtml";
+	}
+
+	<div class="jumbotron">
+	    <h1>ASP.NET</h1>
+	    <p>ASP.NET is a free web framework for building great Web sites and Web applications using HTML, CSS and JavaScript.</p>
+	</div>
+	@Html.Action("StudentForm")
+
+	(OR)
+
+	@{
+	    Html.RenderAction("StudentForm");
+	}  
+
+	HomeController
+	--------------
+    public class HomeController : Controller
+    {
+        public ActionResult Index()
+        {
+            return View("Index");
+        }
+
+        public ActionResult StudentForm()
+        {
+            return PartialView("_StudentForm");
+        }
+    }
+
+    Model
+    -----
+    public class Student
+    {
+        public int StudentId { get; set; }
+        public string StudentFName { get; set; }
+        public string StudentLName { get; set; }
+        public int Age { get; set; }
+    }
+
+ViewBag
+-------
+If you want to send a small amount of temporary data to the view use ViewBag. ViewBag only transfers data from controller to view, not visa-versa. ViewBag values will be null if redirection occurs. The ViewBag life only lasts during the current http request
+
+	Index.cshtml
+	------------
+	@{
+	    ViewBag.Title = "Index";
+	    Layout = "~/Views/Shared/_Layout.cshtml";
+	}
+
+	<div class="jumbotron">
+	    <h1>ASP.NET</h1>
+	    <p>@ViewBag.name</p>
+	</div>
+
+	HomeController
+	--------------
+	public class HomeController : Controller
+	{
+	    public ActionResult Index()
+	    {
+	        ViewBag.name = "moin";
+	        return View("Index");
+	    }
+	}
