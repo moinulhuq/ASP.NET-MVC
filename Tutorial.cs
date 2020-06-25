@@ -440,11 +440,11 @@ Password
 --------
 Html.Password(string name, object value, object htmlAttributes)
 
-	@Html.Password("OnlinePassword")
+	@Html.Password("OnlinePassword", null, new { @class = "form-control" })
 
 	=> 
 
-	<input id="OnlinePassword" name="OnlinePassword" type="password">
+	<input class="form-control" id="OnlinePassword" name="OnlinePassword" type="password">
 
 PasswordFor
 -----------
@@ -2798,8 +2798,10 @@ Seperate 'Student registration form' from 'Index.cshtml' and save that code as p
 
 ViewBag
 -------
-If you want to send a small amount of temporary data to the view use ViewBag. ViewBag only transfers data from controller to view, not visa-versa. ViewBag values will be null if redirection occurs. The ViewBag life only lasts during the current http request
+If you want to send a small amount of temporary data to the view use 'ViewBag'. ViewBag only transfers data from controller to view, not visa-versa. ViewBag values will be null if redirection occurs. The ViewBag life only lasts during the current http request. 'ViewBag' doesn't require typecasting while retriving data from it.
 
+Example01
+---------
 	Index.cshtml
 	------------
 	@{
@@ -2822,3 +2824,522 @@ If you want to send a small amount of temporary data to the view use ViewBag. Vi
 	        return View("Index");
 	    }
 	}
+
+Example02
+---------
+	Index.cshtml
+	------------
+	@using MVCWebApp.Models
+	@model MVCWebApp.Models.Student
+
+    <div class="jumbotron">
+        <h1>ASP.NET</h1>
+        <p>@ViewBag.Student</p>
+        <ul>
+        	@* ViewBag doesn't require typecasting while retriving data from it *@
+
+            @foreach (var std in ViewBag.Student) 
+            {
+                <li>
+                    @std.StudentFName
+                </li>
+            }
+        </ul>
+    </div>
+
+	HomeController
+	--------------
+    public class HomeController : Controller
+    {
+        public ActionResult Index()
+        {            
+            IList<Student> studentList = new List<Student>();
+            studentList.Add(new Student() { StudentId = 1, StudentFName = "moin", StudentLName = "huq", Age = 37 });
+            studentList.Add(new Student() { StudentId = 2, StudentFName = "tanim", StudentLName = "bhuiyan", Age = 37 });
+            studentList.Add(new Student() { StudentId = 3, StudentFName = "shajib", StudentLName = "hassan", Age = 37 });
+            
+            //(OR)
+
+            IList<Student> studentList = new List<Student>() {
+                new Student() { StudentId = 1, StudentFName = "moin", StudentLName = "huq", Age = 37 },
+                new Student() { StudentId = 2, StudentFName = "tanim", StudentLName = "bhuiyan", Age = 37 },
+                new Student() { StudentId = 3, StudentFName = "shajib", StudentLName = "hassan", Age = 37 }
+            };
+
+            ViewBag.Student = studentList;
+            return View("Index");
+        }
+    }
+
+ViewData
+--------
+'ViewData' is similar to 'ViewBag'. 'ViewData' is a dictionary which can contain key-value pairs where each key must be string. 'ViewData' only transfers data from controller to view, not visa-versa. The 'ViewData' life only lasts during the current http request. 'ViewData' require typecasting while retriving data from it.
+
+Example01
+---------
+	Index.cshtml
+	------------
+	@{
+	    ViewBag.Title = "Index";
+	    Layout = "~/Views/Shared/_Layout.cshtml";
+	}
+
+	<div class="jumbotron">
+	    <h1>ASP.NET</h1>
+	    <p>@ViewData["name"]</p>
+	</div>
+
+	HomeController
+	--------------
+	public class HomeController : Controller
+	{
+	    public ActionResult Index()
+	    {
+	        ViewData["name"] = "moin";
+	        return View("Index");
+	    }
+	}
+
+Example02
+---------
+	Index.cshtml
+	------------
+	@using MVCWebApp.Models
+	@model MVCWebApp.Models.Student
+
+    <div class="jumbotron">
+        <h1>ASP.NET</h1>
+        <p>@ViewData["Student"]</p>
+        <ul>
+        	@* ViewData require typecasting while retriving data from it *@
+        	
+            @foreach (var std in ViewData["Student"] as IList<Student>)
+            {
+                <li>
+                    @std.StudentFName
+                </li>
+            }
+        </ul>
+    </div>
+
+	HomeController
+	--------------
+    public class HomeController : Controller
+    {
+        public ActionResult Index()
+        {            
+            IList<Student> studentList = new List<Student>();
+            studentList.Add(new Student() { StudentId = 1, StudentFName = "moin", StudentLName = "huq", Age = 37 });
+            studentList.Add(new Student() { StudentId = 2, StudentFName = "tanim", StudentLName = "bhuiyan", Age = 37 });
+            studentList.Add(new Student() { StudentId = 3, StudentFName = "shajib", StudentLName = "hassan", Age = 37 });
+            
+            //(OR)
+
+            IList<Student> studentList = new List<Student>() {
+                new Student() { StudentId = 1, StudentFName = "moin", StudentLName = "huq", Age = 37 },
+                new Student() { StudentId = 2, StudentFName = "tanim", StudentLName = "bhuiyan", Age = 37 },
+                new Student() { StudentId = 3, StudentFName = "shajib", StudentLName = "hassan", Age = 37 }
+            };
+
+            ViewData["Student"] = studentList;
+            return View("Index");
+        }
+    }
+
+You can also add a 'KeyValuePair' into 'ViewData' as shown below
+
+Example03
+---------
+	Index.cshtml
+	------------
+	@{
+	    ViewBag.Title = "Index";
+	    Layout = "~/Views/Shared/_Layout.cshtml";
+	}
+
+    <div class="jumbotron">
+        <h1>ASP.NET</h1>
+        <p>@ViewData["Name"]</p>
+        <p>@ViewData["Age"]</p>
+    </div>
+
+	HomeController
+	--------------
+    public class HomeController : Controller
+    {
+        public ActionResult Index()
+        {            
+            ViewData.Add(new KeyValuePair<string, object>("Name", "moin"));
+            ViewData.Add(new KeyValuePair<string, object>("Age", 37));
+            return View("Index");
+        }
+    }
+
+'ViewData' and 'ViewBag' both use the same dictionary internally, So you cannot have 'ViewData Key' matches with the 'property name of ViewBag', otherwise it will throw a runtime exception.
+
+	HomeController
+	--------------
+    public class HomeController : Controller
+    {
+        public ActionResult Index()
+        {            
+            ViewBag.Id = 1;
+            ViewData.Add("Id", 1); // throw runtime exception as it already has "Id" key
+
+            ViewData.Add(new KeyValuePair<string, object>("Name", "moin"));
+            ViewData.Add(new KeyValuePair<string, object>("Age", 37));
+
+            return View("Index");
+        }
+    }
+
+TempData
+--------
+'TempData' can be used in subsequent request. 'TempData' will be cleared out after the completion of a subsequent request. It is useful when transferring data from one action method to another action method of the same or a different controller as well as redirects. It is dictionary type like 'ViewData'.
+
+	Index.cshtml
+	------------
+	@{
+	    ViewBag.Title = "Index";
+	    Layout = "~/Views/Shared/_Layout.cshtml";
+	}
+
+    <div class="jumbotron">
+        <h1>ASP.NET</h1>
+        <h3><u>Index</u></h3>
+        <p>@TempData["Name"]</p>
+        <p>@TempData["Age"]</p>
+
+        <h3><u>About</u></h3>
+        <p>@ViewBag.AboutName</p>
+        <p>@ViewBag.AboutAge</p>
+
+        <h3><u>Contact</u></h3>
+        <p>@ViewBag.ContactName</p>
+        <p>@ViewBag.ContactAge</p>
+    </div>
+
+	HomeController
+	--------------
+    public class HomeController : Controller
+    {
+        public ActionResult Index()
+        {
+            TempData["Name"] = "moin";
+            TempData["Age"] = 37;
+
+            return View("Index");
+        }
+
+        public ActionResult About()
+        {
+            ViewBag.AboutName = TempData["Name"];
+            ViewBag.AboutAge = TempData["Age"];
+
+            return View("Index");
+        }
+
+        public ActionResult Contact()
+        {
+            ViewBag.ContactName = TempData["Name"];
+            ViewBag.ContactAge = TempData["Age"];
+
+            return View("Index");
+        }
+    }
+
+When you request "https://localhost:44334/Home/Index", It will print the value of 'TempData["Name"]' and 'TempData["Age"]' then TempData will be cleared out. no data will be displayed on request of "https://localhost:44334/Home/About". To keep value of 'TempData' we can use 'TempData.Keep' inside 'Index' method so that we can get value of 'TempData' on request of "https://localhost:44334/Home/About". And we can do same for other function.
+
+	HomeController
+	--------------
+    public class HomeController : Controller
+    {
+        public ActionResult Index()
+        {
+            TempData["Name"] = "moin";
+            TempData["Age"] = 37;
+			TempData.Keep();
+            return View("Index");
+        }
+
+        public ActionResult About()
+        {
+            ViewBag.AboutName = TempData["Name"];
+            ViewBag.AboutAge = TempData["Age"];
+            TempData.Keep();
+            return View("Index");
+        }
+
+        public ActionResult Contact()
+        {
+            ViewBag.ContactName = TempData["Name"];
+            ViewBag.ContactAge = TempData["Age"];
+
+            return View("Index");
+        }
+    }
+
+Example02
+---------
+
+	Index.cshtml
+	------------
+	@{
+	    ViewBag.Title = "Index";
+	    Layout = "~/Views/Shared/_Layout.cshtml";
+	}
+
+    <div class="jumbotron">
+        <h1>ASP.NET</h1>
+    </div>
+
+	HomeController
+	--------------
+    public class HomeController : Controller
+    {
+        public ActionResult Index()
+        {
+            TempData["Name"] = "moin";
+            TempData["Age"] = 37;
+
+            return View("Index");
+        }
+
+        public ActionResult About()
+        {
+            string userName;
+            int userAge;
+
+            if (TempData.ContainsKey("Name"))
+                userName = TempData["Name"].ToString();
+
+            if (TempData.ContainsKey("Age"))
+                userAge = int.Parse(TempData["Age"].ToString());
+
+            // do something with userName or userAge here 
+            return View("Index");
+        }
+    }
+
+TempData can be used to store only one time messages like error messages, validation messages
+
+Filters
+-------
+If want to execute some logic before or after of an action method executes, you can use Filters. MVC provides different types of filters and must be implemented to create a custom filter class
+
++-----------------------+---------------------------------------------------------------------------------------------------------------------+-----------------------------+---------------------------------------------+
+|      Filter Type      |                                                     Description                                                     |       Built-in Filter       |                  Interface                  |
++-----------------------+---------------------------------------------------------------------------------------------------------------------+-----------------------------+---------------------------------------------+
+| Authorization filters | Performs authentication and authorizes before executing action method.                                              | [Authorize], [RequireHttps] | IAuthorizationFilter, IAuthenticationFilter |
+| Action filters        | Performs some operation before and after an action method executes.                                                 |                             | IActionFilter                               |
+| Result filters        | Performs some operation before or after the execution of view result.                                               | [OutputCache]               | IResultFilter                               |
+| Exception filters     | Performs some operation if there is an unhandled exception thrown during the execution of the ASP.NET MVC pipeline. | [HandleError]               | IExceptionFilter                            |
++-----------------------+---------------------------------------------------------------------------------------------------------------------+-----------------------------+---------------------------------------------+
+
+Authorization filters
+---------------------
+By default, all the action methods are accessible to both anonymous and authenticated users but, if you want the action methods to be available only for authenticated and authorized users, then you need to use the Authorization filters.
+
+	web.config
+	----------
+	<system.web>
+	  <authentication mode="Forms">
+		  <forms loginUrl="/Home/Login"></forms>
+	  </authentication>
+	  ...
+	</system.web>
+
+	Index.cshtml
+	------------
+	@{
+	    ViewBag.Title = "Index";
+	    Layout = "~/Views/Shared/_Layout.cshtml";
+	}
+
+	    <div class="jumbotron">
+	        <h1>ASP.NET</h1>
+	    </div>
+
+
+	NonSecured.cshtml
+	-----------------
+	@{
+	    ViewBag.Title = "NonSecured";
+	    Layout = "~/Views/Shared/_Layout.cshtml";
+	}
+
+	<h2>NonSecured</h2>
+
+	Secured.cshtml
+	--------------
+	@{
+	    ViewBag.Title = "Secured";
+	    Layout = "~/Views/Shared/_Layout.cshtml";
+	}
+
+	<h2>Secured</h2>
+
+	Login.cshtml
+	------------
+	@{
+	    ViewBag.Title = "Login";
+	}
+
+	<div>
+	    @using (Html.BeginForm("Index", "Home", FormMethod.Post))
+	    {
+	        @Html.AntiForgeryToken()
+	        <div class="form-horizontal">
+	            <h2>Student Login</h2>
+	            <div class="form-group">
+	                @Html.TextBox("StudentName", null, new { @class = "form-control", placeholder = "User Name" })
+	            </div>
+
+	            <div class="form-group">                
+	                @Html.Password("Password", null, new { @class = "form-control", placeholder = "Password" })
+	            </div>
+
+	            <div class="form-group">
+	                <div class="col-md-offset-2 col-md-10">
+	                    <input type="submit" value="Login" class="btn btn-default" />
+	                </div>
+	            </div>
+	        </div>
+	    }
+	</div>
+
+	HomeController.cs
+	-----------------
+    public class HomeController : Controller
+    {
+        public ActionResult Index()
+        {
+            return View("Index");
+        }
+
+        [AllowAnonymous]
+        public ActionResult NonSecured()
+        {
+            return View("NonSecured");
+        }
+
+        [Authorize]
+        public ActionResult Secured()
+        {
+            return View("Secured");
+        }
+
+        public ActionResult Login()
+        {
+            return View("Login");
+        }
+    }
+
+If you want to use '[Authorize]' to the controller then system can give 401 error to overcome this problem go to the project property pane and change the ‘Window Authentication’ setting to ‘Enabled’.
+
+	HomeController.cs
+	-----------------
+    [Authorize]
+    public class HomeController : Controller
+    {
+        public ActionResult Index()
+        {
+            return View("Index");
+        }
+
+        [AllowAnonymous]
+        public ActionResult NonSecured()
+        {
+            return View("NonSecured");
+        }
+
+        public ActionResult Secured()
+        {
+            return View("Secured");
+        }
+
+        public ActionResult Login()
+        {
+            return View("Login");
+        }
+    }
+
+Custom Authorization Filter
+---------------------------
+The Authorization Filters executed after the Authentication Filter. This filter is used to check whether the user has the rights to access the particular resource or page. The built-in AuthorizeAttribute and RequireHttpsAttribute are examples of Authorization Filters.
+
+	public interface IAuthorizationFilter
+	{
+	    void OnAuthorization(AuthorizationContext filterContext);
+	}
+
+We are going to implement 'IAuthorizationFilter' below for Custom Authorization
+
+	Login.cshtml
+	------------
+	@{
+	    ViewBag.Title = "Index";
+	    Layout = "~/Views/Shared/_Layout.cshtml";
+	}
+
+	<div class="jumbotron">
+	    <h1>Head</h1>
+	</div>
+
+	
+	CustomAuthorize.cs
+	------------------
+    public class CustomAuthorize : AuthorizeAttribute, IAuthorizationFilter
+    {
+        public string Permissions { get; set; }
+
+        public override void OnAuthorization(AuthorizationContext filterContext)
+        {
+            /*
+            var session = filterContext.HttpContext.Session;
+            var isLoggedIn = Convert.ToBoolean(session["loggedin"]);
+            var ControllerName = filterContext.Controller.GetType().Name;
+            var ActionName = filterContext.ActionDescriptor.ActionName;
+            */
+
+            var userName = filterContext.HttpContext.User.Identity.Name;
+            bool isAuthorized = CheckUserPermission(userName, Permissions);
+
+            if (!isAuthorized)
+            {
+                filterContext.Result = new HttpUnauthorizedResult();
+            }
+        }
+
+        private bool CheckUserPermission(string user, string permission)
+        {
+            //Check in Database for permission status
+            //var assignedPermissionsForUser = MockData.UserPermissions.Where(x => x.Key == userName).Select(x => x.Value).ToList();
+            var assignedPermissionsForUser = "Read";
+
+            // Page access permission from controller
+            var requiredPermissions = permission.Split(',');
+            
+            bool flag = false;
+
+            foreach (var x in requiredPermissions)
+            {
+                if (assignedPermissionsForUser.Contains(x))
+                {
+                    flag = true;
+                }
+            }
+            return flag;
+        }
+    }
+
+	HomeController.cs
+	-----------------
+    public class HomeController : Controller
+    {
+        [CustomAuthorize(Permissions = "Read")]
+        public ActionResult Index()
+        {
+            return View("Index");
+        }
+    }
