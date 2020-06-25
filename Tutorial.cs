@@ -3210,59 +3210,59 @@ By default, all the action methods are accessible to both anonymous and authenti
 
 	HomeController.cs
 	-----------------
-    public class HomeController : Controller
-    {
-        public ActionResult Index()
-        {
-            return View("Index");
-        }
+	public class HomeController : Controller
+	{
+	    public ActionResult Index()
+	    {
+	        return View("Index");
+	    }
 
-        [AllowAnonymous]
-        public ActionResult NonSecured()
-        {
-            return View("NonSecured");
-        }
+	    [AllowAnonymous]
+	    public ActionResult NonSecured()
+	    {
+	        return View("NonSecured");
+	    }
 
-        [Authorize]
-        public ActionResult Secured()
-        {
-            return View("Secured");
-        }
+	    [Authorize]
+	    public ActionResult Secured()
+	    {
+	        return View("Secured");
+	    }
 
-        public ActionResult Login()
-        {
-            return View("Login");
-        }
-    }
+	    public ActionResult Login()
+	    {
+	        return View("Login");
+	    }
+	}
 
 If you want to use '[Authorize]' to the controller then system can give 401 error to overcome this problem go to the project property pane and change the ‘Window Authentication’ setting to ‘Enabled’.
 
 	HomeController.cs
 	-----------------
-    [Authorize]
-    public class HomeController : Controller
-    {
-        public ActionResult Index()
-        {
-            return View("Index");
-        }
+	[Authorize]
+	public class HomeController : Controller
+	{
+	    public ActionResult Index()
+	    {
+	        return View("Index");
+	    }
 
-        [AllowAnonymous]
-        public ActionResult NonSecured()
-        {
-            return View("NonSecured");
-        }
+	    [AllowAnonymous]
+	    public ActionResult NonSecured()
+	    {
+	        return View("NonSecured");
+	    }
 
-        public ActionResult Secured()
-        {
-            return View("Secured");
-        }
+	    public ActionResult Secured()
+	    {
+	        return View("Secured");
+	    }
 
-        public ActionResult Login()
-        {
-            return View("Login");
-        }
-    }
+	    public ActionResult Login()
+	    {
+	        return View("Login");
+	    }
+	}
 
 Custom Authorization Filter
 ---------------------------
@@ -3289,57 +3289,57 @@ We are going to implement 'IAuthorizationFilter' below for Custom Authorization
 	
 	CustomAuthorize.cs
 	------------------
-    public class CustomAuthorize : AuthorizeAttribute, IAuthorizationFilter
-    {
-        public string Permissions { get; set; }
+	public class CustomAuthorize : AuthorizeAttribute, IAuthorizationFilter
+	{
+	    public string Permissions { get; set; }
 
-        public override void OnAuthorization(AuthorizationContext filterContext)
-        {
-            /*
-            var session = filterContext.HttpContext.Session;
-            var isLoggedIn = Convert.ToBoolean(session["loggedin"]);
-            var ControllerName = filterContext.Controller.GetType().Name;
-            var ActionName = filterContext.ActionDescriptor.ActionName;
-            */
+	    public override void OnAuthorization(AuthorizationContext filterContext)
+	    {
+	        /*
+	        var session = filterContext.HttpContext.Session;
+	        var isLoggedIn = Convert.ToBoolean(session["loggedin"]);
+	        var ControllerName = filterContext.Controller.GetType().Name;
+	        var ActionName = filterContext.ActionDescriptor.ActionName;
+	        */
 
-            var userName = filterContext.HttpContext.User.Identity.Name;
-            bool isAuthorized = CheckUserPermission(userName, Permissions);
+	        var userName = filterContext.HttpContext.User.Identity.Name;
+	        bool isAuthorized = CheckUserPermission(userName, Permissions);
 
-            if (!isAuthorized)
-            {
-                filterContext.Result = new HttpUnauthorizedResult();
-            }
-        }
+	        if (!isAuthorized)
+	        {
+	            filterContext.Result = new HttpUnauthorizedResult();
+	        }
+	    }
 
-        private bool CheckUserPermission(string user, string permission)
-        {
-            //Check in Database for permission status
-            //var assignedPermissionsForUser = MockData.UserPermissions.Where(x => x.Key == userName).Select(x => x.Value).ToList();
-            var assignedPermissionsForUser = "Read";
+	    private bool CheckUserPermission(string user, string permission)
+	    {
+	        //Check in Database for permission status
+	        //var assignedPermissionsForUser = MockData.UserPermissions.Where(x => x.Key == userName).Select(x => x.Value).ToList();
+	        var assignedPermissionsForUser = "Read";
 
-            // Page access permission from controller
-            var requiredPermissions = permission.Split(',');
-            
-            bool flag = false;
+	        // Page access permission from controller
+	        var requiredPermissions = permission.Split(',');
+	        
+	        bool flag = false;
 
-            foreach (var x in requiredPermissions)
-            {
-                if (assignedPermissionsForUser.Contains(x))
-                {
-                    flag = true;
-                }
-            }
-            return flag;
-        }
-    }
+	        foreach (var x in requiredPermissions)
+	        {
+	            if (assignedPermissionsForUser.Contains(x))
+	            {
+	                flag = true;
+	            }
+	        }
+	        return flag;
+	    }
+	}
 
 	HomeController.cs
 	-----------------
-    public class HomeController : Controller
-    {
-        [CustomAuthorize(Permissions = "Read")]
-        public ActionResult Index()
-        {
-            return View("Index");
-        }
-    }
+	public class HomeController : Controller
+	{
+	    [CustomAuthorize(Permissions = "Read")]
+	    public ActionResult Index()
+	    {
+	        return View("Index");
+	    }
+	}
