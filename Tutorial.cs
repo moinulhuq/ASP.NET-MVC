@@ -3451,12 +3451,23 @@ If there is any result set from 'OnAuthentication', then 'OnAuthenticationChalle
         public void OnAuthentication(AuthenticationContext filterContext)
         {
             var session = filterContext.HttpContext.Session;
-            bool isLoggedIn = Convert.ToBoolean(session["isLoggedIn"]);
+
+            /*bool isLoggedIn = Convert.ToBoolean(session["isLoggedIn"]);
 
             if (!isLoggedIn) {
 
                 filterContext.Result = new HttpUnauthorizedResult();
+            }*/
+
+            //(OR)
+
+            bool isLoggedIn = string.IsNullOrEmpty(Convert.ToString(filterContext.HttpContext.Session["UserName"]));
+
+            if (isLoggedIn)
+            {
+                filterContext.Result = new HttpUnauthorizedResult();
             }
+
         }
 
         public void OnAuthenticationChallenge(AuthenticationChallengeContext filterContext)
@@ -3478,7 +3489,7 @@ If there is any result set from 'OnAuthentication', then 'OnAuthenticationChalle
 
 	AccountController.cs
 	--------------------
-	public class AccountController : Controller
+    public class AccountController : Controller
     {
         public ActionResult Login()
         {
@@ -3489,7 +3500,10 @@ If there is any result set from 'OnAuthentication', then 'OnAuthenticationChalle
         public ActionResult Login(User user)
         {
             // To Avoid NullReferenceException we can use user.UserName? and user.Password?
+
             if (user.UserName?.ToLower() == "admin" && user.Password?.ToLower() == "admin") {
+
+                Session["UserName"] = "admin";
                 Session["isLoggedIn"] = "true";
                 return RedirectToAction("Index", "Home");
             }
@@ -3498,6 +3512,7 @@ If there is any result set from 'OnAuthentication', then 'OnAuthenticationChalle
 
         public ActionResult LogOut(User user)
         {
+        	Session.Remove("UserName");
             Session["isLoggedIn"] = "false";
             return View("Login");
         }
