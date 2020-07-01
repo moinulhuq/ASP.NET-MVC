@@ -3125,7 +3125,7 @@ TempData can be used to store only one time messages like error messages, valida
 
 Filters
 -------
-If want to execute some logic before or after of an action method executes, you can use Filters. MVC provides different types of filters and must be implemented to create a custom filter class
+If want to execute some logic before or after of an action method executes, you can use Filters. MVC provides different types of filters and must be implemented to create a custom filter class. Types of Filters in ASP.NET MVC and their Sequence of Execution
 
 +-----------------------+---------------------------------------------------------------------------------------------------------------------+-----------------------------+---------------------------------------------+
 |      Filter Type      |                                                     Description                                                     |       Built-in Filter       |                  Interface                  |
@@ -3135,6 +3135,10 @@ If want to execute some logic before or after of an action method executes, you 
 | Result filters        | Performs some operation before or after the execution of view result.                                               | [OutputCache]               | IResultFilter                               |
 | Exception filters     | Performs some operation if there is an unhandled exception thrown during the execution of the ASP.NET MVC pipeline. | [HandleError]               | IExceptionFilter                            |
 +-----------------------+---------------------------------------------------------------------------------------------------------------------+-----------------------------+---------------------------------------------+
+
+Authentication VS Authorization
+-------------------------------
+Authentication and Authorization are separate concepts. Authentication is where a user provides credentials to access a resource, whereas authorization allows access to particular resources based on user’s role. Authentication filters run before Authorization filter. 
 
 Authorization filters
 ---------------------
@@ -3343,3 +3347,158 @@ We are going to implement 'IAuthorizationFilter' below for Custom Authorization
 	        return View("Index");
 	    }
 	}
+
+Authorization Filter
+--------------------
+ASP.NET MVC does not provide any built-in authentication filter. So, if you want to use authentication filter, then there is a way is to create a custom authentication filter.
+
+Custom Authentication Filter
+----------------------------
+To create a custom authentication filter, we need to create a class by implementing the 'IAuthenticationFilter' Interface.
+
+	public interface IAuthenticationFilter
+	{
+		void OnAuthentication (AuthenticationContext filterContext);
+
+		void OnAuthenticationChallenge (AuthenticationChallengeContext filterContext);
+	}
+
+If there is any result set from 'OnAuthentication', then 'OnAuthenticationChallenge' will execute, after that if there is any other result set from 'OnAuthorization', then again 'OnAuthenticationChallenge' will execute.
+
+	web.config
+	----------
+	<system.web>
+	  <authentication mode="Forms">
+		  <forms loginUrl="/Account/Login"></forms>
+	  </authentication>
+	  ...
+	</system.web>
+
+	Index.cshtml
+	------------
+	@{
+	    ViewBag.Title = "Index";
+	    Layout = "~/Views/Shared/_Layout.cshtml";
+	}
+
+    <div class="jumbotron">
+	    <h2>Welcome you are loggedIn</h2>
+	    @Html.ActionLink("LogOut", "LogOut", "Account")
+    </div>
+
+	Error.cshtml
+	-----------------
+    <div>
+        <h2>You are not authorize to see this page.</h2>
+        @Html.ActionLink("GoBack to login page", "Login", "Account")
+    </div>
+
+	Login.cshtml
+	------------
+	@model MyWebApp.Models.User
+
+    <div>
+        @using (Html.BeginForm("Login", "Account", FormMethod.Post))
+        {
+            @Html.AntiForgeryToken()
+            <div class="form-horizontal">
+                <h2>Student Login</h2>
+                <div class="form-group">
+                    @Html.TextBoxFor(m => m.UserName, new { @class = "form-control", placeholder = "User Name" })
+                    @Html.ValidationMessageFor(m => m.UserName, "", new { @class = "text-danger" })
+                </div>
+
+                <div class="form-group">
+                    @Html.PasswordFor(m => m.Password, new { @class = "form-control", placeholder = "Password" })
+                    @Html.ValidationMessageFor(m => m.Password, "", new { @class = "text-danger" })
+                </div>
+
+                <div class="form-group">
+                    <div class="col-md-offset-2 col-md-10">
+                        <input type="submit" value="Login" class="btn btn-default" />
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    User.cs
+    -------
+    public class User
+	{
+		public int ID { get; set; }
+		[Required]
+		public string UserName { get; set; }
+		[Required]
+		public string Password { get; set; }
+	}
+
+	HomeController.cs
+	-----------------
+	public class HomeController : Controller
+	{
+        [CustomAuthentication]
+        public ActionResult Index()
+        {
+			return View("Index");
+		}
+	}
+
+	Controllers/CustomAuthentication.cs
+	-----------------------------------
+    public class CustomAuthentication : ActionFilterAttribute, IAuthenticationFilter
+    {
+        public void OnAuthentication(AuthenticationContext filterContext)
+        {
+            var session = filterContext.HttpContext.Session;
+            bool isLoggedIn = Convert.ToBoolean(session["isLoggedIn"]);
+
+            if (!isLoggedIn) {
+
+                filterContext.Result = new HttpUnauthorizedResult();
+            }
+        }
+
+        public void OnAuthenticationChallenge(AuthenticationChallengeContext filterContext)
+        {
+            if (filterContext.Result == null || filterContext.Result is HttpUnauthorizedResult)
+            {
+                //Redirect to Login page
+
+                //filterContext.Result = new RedirectToRouteResult( new RouteValueDictionary { { "controller", "Account" }, { "action", "Login" } } );
+
+                //(OR)
+
+                //Redirect to Error page
+
+                filterContext.Result = new ViewResult { ViewName = "Error" };
+            }
+        }
+    }
+
+	AccountController.cs
+	--------------------
+	public class AccountController : Controller
+    {
+        public ActionResult Login()
+        {
+            return View ();
+        }
+
+        [HttpPost]
+        public ActionResult Login(User user)
+        {
+            // To Avoid NullReferenceException we can use user.UserName? and user.Password?
+            if (user.UserName?.ToLower() == "admin" && user.Password?.ToLower() == "admin") {
+                Session["isLoggedIn"] = "true";
+                return RedirectToAction("Index", "Home");
+            }
+            return View("Login");
+        }
+
+        public ActionResult LogOut(User user)
+        {
+            Session["isLoggedIn"] = "false";
+            return View("Login");
+        }
+    }
